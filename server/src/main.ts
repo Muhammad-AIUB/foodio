@@ -23,4 +23,4 @@ async function bootstrap(): Promise<void> {
   logger.log(`Server running on http://localhost:${port}/api/v1`);
 }
 
-bootstrap();
+void bootstrap();
