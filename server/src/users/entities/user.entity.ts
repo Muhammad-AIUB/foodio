@@ -22,7 +22,7 @@ export class User {
   @Column({ length: 255 })
   password: string;
 
-  @Column({ length: 300, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true })
   address: string | null;
 
   @Column({ name: 'is_active', default: true })
