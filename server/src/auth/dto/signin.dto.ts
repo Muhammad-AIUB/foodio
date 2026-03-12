@@ -1,9 +1,10 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { normalizeEmail } from '../../common/dto/transformers';
 
 export class SignInDto {
   @IsEmail()
-  @Transform(({ value }) => value.toLowerCase().trim())
+  @Transform(normalizeEmail)
   email: string;
 
   @IsString()

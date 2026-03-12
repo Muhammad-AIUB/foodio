@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { CreateUserInput } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,8 +23,8 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id } });
   }
 
-  async create(data: Partial<User>): Promise<User> {
-    if (!data.email) throw new BadRequestException('Email is required');
+  async create(data: CreateUserInput): Promise<User> {
+    if (!data.email?.trim()) throw new BadRequestException('Email is required');
     const exists = await this.findByEmail(data.email);
     if (exists) throw new ConflictException('Email already registered');
     const user = this.userRepo.create(data);

@@ -1,8 +1,26 @@
 import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const config = app.get(ConfigService);
+  const logger = new Logger('Bootstrap');
+
+  app.use(helmet());
+  app.enableCors({
+    origin: config.get<string>('CLIENT_URL') ?? '*',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    credentials: true,
+  });
+
+  app.setGlobalPrefix('api/v1');
+
+  const port = config.get<number>('PORT') ?? 3000;
+  await app.listen(port);
+  logger.log(`Server running on http://localhost:${port}/api/v1`);
 }
+
 bootstrap();

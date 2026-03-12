@@ -6,6 +6,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { normalizeEmail } from '../../common/dto/transformers';
 
 export class RegisterDto {
   @IsString()
@@ -13,12 +14,12 @@ export class RegisterDto {
   fullName: string;
 
   @IsEmail()
-  @Transform(({ value }) => value.toLowerCase().trim())
+  @Transform(normalizeEmail)
   email: string;
 
   @IsString()
   @MinLength(8)
-  @MaxLength(72) // bcrypt max
+  @MaxLength(72)
   password: string;
 
   @IsOptional()

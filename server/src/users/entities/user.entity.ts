@@ -23,7 +23,7 @@ export class User {
   password: string;
 
   @Column({ length: 300, nullable: true })
-  address: string;
+  address: string | null;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;

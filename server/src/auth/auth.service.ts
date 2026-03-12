@@ -1,9 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import { hashPassword, verifyPassword } from './utils/password.util';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/signin.dto';
+import { AuthResponse } from './auth.types';
+import { CreateUserInput } from '../users/dto/create-user.dto';
+import { User } from '../users/entities/user.entity';
 
 const SALT_ROUNDS = 12;
 
@@ -14,35 +17,34 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const hashed = await bcrypt.hash(dto.password, SALT_ROUNDS);
-    const user = await this.usersService.create({
-      ...dto,
+  async register(dto: RegisterDto): Promise<AuthResponse> {
+    const hashed = await hashPassword(dto.password, SALT_ROUNDS);
+    const input: CreateUserInput = {
+      fullName: dto.fullName,
+      email: dto.email,
       password: hashed,
-    });
-
-    const token = this.issueToken(user.id, user.email);
-    return { accessToken: token, user: this.sanitize(user) };
+      ...(dto.address != null && { address: dto.address }),
+    };
+    const user = await this.usersService.create(input);
+    return this.buildAuthResponse(user);
   }
 
-  async signIn(dto: SignInDto) {
-    // O(1) — indexed email lookup
+  async signIn(dto: SignInDto): Promise<AuthResponse> {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
-
-    const valid = await bcrypt.compare(dto.password, user.password);
+    const valid = await verifyPassword(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
+    return this.buildAuthResponse(user);
+  }
 
-    const token = this.issueToken(user.id, user.email);
+  sanitize<T extends { password?: string }>(user: T): Omit<T, 'password'> {
+    const { password, ...rest } = user;
+    void password;
+    return rest;
+  }
+
+  private buildAuthResponse(user: User): AuthResponse {
+    const token = this.jwtService.sign({ sub: user.id, email: user.email });
     return { accessToken: token, user: this.sanitize(user) };
-  }
-
-  private issueToken(sub: string, email: string): string {
-    return this.jwtService.sign({ sub, email });
-  }
-
-  private sanitize(user: any) {
-    const { password, ...safe } = user;
-    return safe;
   }
 }
