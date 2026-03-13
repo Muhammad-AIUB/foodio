@@ -21,8 +21,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   create(@CurrentUser() user: User, @Body() dto: CreateOrderDto) {
     return this.ordersService.create(user.id, dto);
   }
@@ -31,6 +30,18 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   findAll(@CurrentUser() user: User) {
     return this.ordersService.findAll(user.id, user.role);
+  }
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  findMyOrders(@CurrentUser() user: User) {
+    return this.ordersService.findMyOrders(user.id);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.ordersService.findOne(id, user.id);
   }
 
   @Patch(':id/status')

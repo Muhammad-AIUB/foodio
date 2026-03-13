@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { OrderStatus, Prisma } from '@prisma/client';
@@ -8,6 +9,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 const orderInclude = {
+  orderItems: {
+    include: { menuItem: true },
+  },
+};
+
+const adminOrderInclude = {
+  user: { select: { id: true, name: true, email: true } },
   orderItems: {
     include: { menuItem: true },
   },
@@ -27,8 +35,8 @@ export class OrdersService {
 
       const foundIds = new Set(menuItems.map((m) => m.id));
       const missingIds = menuItemIds.filter((id) => !foundIds.has(id));
-      if (missingIds.length) {
-        throw new BadRequestException('One or more menu items not found');
+      if (menuItems.length !== menuItemIds.length) {
+        throw new NotFoundException('One or more menu items do not exist');
       }
 
       const unavailable = menuItems.filter((m) => !m.availability);
@@ -71,6 +79,28 @@ export class OrdersService {
     });
   }
 
+  async findMyOrders(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: orderInclude,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: orderInclude,
+    });
+    if (!order) {
+      throw new NotFoundException(`Order with id "${id}" not found`);
+    }
+    if (order.userId !== userId) {
+      throw new ForbiddenException('You are not allowed to view this order');
+    }
+    return order;
+  }
+
   async findAll(userId: string, userRole: string) {
     const where =
       userRole === 'ADMIN' ? {} : { userId };
@@ -78,6 +108,13 @@ export class OrdersService {
     return this.prisma.order.findMany({
       where,
       include: orderInclude,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findAllForAdmin() {
+    return this.prisma.order.findMany({
+      include: adminOrderInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
