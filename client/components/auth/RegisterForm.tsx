@@ -34,7 +34,7 @@ export default function RegisterForm() {
     setError('');
     setSuccess('');
     try {
-      await api.post('/auth/signup', credentials);
+      await api.post('/auth/register', credentials);
       setSuccess('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! এবার লগইন করুন।');
       setCredentials(INITIAL_CREDS);
     } catch (err) {

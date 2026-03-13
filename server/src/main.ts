@@ -18,7 +18,7 @@ async function bootstrap(): Promise<void> {
 
   app.setGlobalPrefix('api/v1');
 
-  const port = config.get<number>('PORT') ?? 3000;
+  const port = config.get<number>('PORT') ?? 5000;
   await app.listen(port);
   logger.log(`Server running on http://localhost:${port}/api/v1`);
 }
