@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
+import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -21,6 +22,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
     AdminModule,
     CategoriesModule,
     MenuItemsModule,
+    OrdersModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
