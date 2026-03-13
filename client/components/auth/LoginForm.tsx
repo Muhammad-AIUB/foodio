@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { api } from '@/lib/axios';
-import InputField from '@/components/common/InputField';
-import Button from '@/components/common/Button';
+import InputField from '../common/InputField';
+import Button from '../common/Button';
 import type { LoginCredentials } from '@/types';
 import type { AxiosError } from 'axios';
 
