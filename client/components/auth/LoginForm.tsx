@@ -28,12 +28,8 @@ export default function LoginForm() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post<{ accessToken?: string; token?: string }>('/auth/signin', credentials);
-      const token = data.accessToken ?? data.token;
-      if (token) {
-        localStorage.setItem('accessToken', token);
-        // TODO: Redirect to dashboard
-      }
+      await api.post('/auth/signin', credentials);
+      // Cookie set by server; TODO: redirect to dashboard
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
