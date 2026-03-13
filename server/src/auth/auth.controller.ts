@@ -15,11 +15,11 @@ import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/signin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User } from '@prisma/client';
 import { AuthResponse } from './auth.types';
 
 const COOKIE_NAME = 'access_token';
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7d
+const MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24h
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +33,7 @@ export class AuthController {
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
+      sameSite: 'lax',
       maxAge: MAX_AGE_MS,
       path: '/',
     });
@@ -63,7 +63,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signout')
   signOut(@Res({ passthrough: true }) res: Response): { message: string } {
-    res.clearCookie(COOKIE_NAME, { path: '/', httpOnly: true });
+    res.clearCookie(COOKIE_NAME, {
+      path: '/',
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+    });
     return { message: 'Signed out' };
   }
 

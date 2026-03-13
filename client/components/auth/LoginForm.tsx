@@ -12,7 +12,11 @@ const getErrorMessage = (err: unknown): string => {
   return axiosErr.response?.data?.message ?? 'লগইন করতে সমস্যা হচ্ছে। ইমেইল বা পাসওয়ার্ড চেক করুন।';
 };
 
-export default function LoginForm() {
+interface LoginFormProps {
+  onSuccess?: () => void;
+}
+
+export default function LoginForm({ onSuccess }: LoginFormProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,7 +33,7 @@ export default function LoginForm() {
     setError('');
     try {
       await api.post('/auth/signin', credentials);
-      // Cookie set by server; TODO: redirect to dashboard
+      onSuccess?.();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

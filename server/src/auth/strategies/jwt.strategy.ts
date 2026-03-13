@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@prisma/client';
 
 export interface JwtPayload {
   sub: string;
@@ -22,7 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => req?.cookies?.['access_token'] ?? null,
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
@@ -31,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<User> {
     const user = await this.usersService.findById(payload.sub);
-    if (!user || !user.isActive) throw new UnauthorizedException();
+    if (!user) throw new UnauthorizedException();
     return user;
   }
 }

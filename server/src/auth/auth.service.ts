@@ -6,7 +6,7 @@ import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/signin.dto';
 import { AuthResponse } from './auth.types';
 import { CreateUserInput } from '../users/dto/create-user.dto';
-import { User } from '../users/entities/user.entity';
+import { User } from '@prisma/client';
 
 const SALT_ROUNDS = 12;
 
@@ -20,10 +20,9 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<AuthResponse> {
     const hashed = await hashPassword(dto.password, SALT_ROUNDS);
     const input: CreateUserInput = {
-      fullName: dto.fullName,
+      name: dto.name,
       email: dto.email,
       password: hashed,
-      ...(dto.address != null && { address: dto.address }),
     };
     const user = await this.usersService.create(input);
     return this.buildAuthResponse(user);
