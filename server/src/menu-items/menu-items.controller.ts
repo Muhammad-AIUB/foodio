@@ -24,16 +24,10 @@ export class MenuItemsController {
   @Get()
   findAll(
     @Query('search') search?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('availability') availability?: string,
+    @Query('category') category?: string,
+    @Query('available') available?: string,
   ) {
-    const availabilityBool =
-      availability === 'true' ? true : availability === 'false' ? false : undefined;
-    return this.menuItemsService.findAll({
-      search,
-      categoryId: categoryId || undefined,
-      availability: availabilityBool,
-    });
+    return this.menuItemsService.findAll({ search, category, available });
   }
 
   @Get(':id')

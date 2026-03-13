@@ -16,29 +16,26 @@ export class MenuItemsService {
 
   async findAll(filters: {
     search?: string;
-    categoryId?: string;
-    availability?: boolean;
+    category?: string;
+    available?: string;
   }) {
     const where: Prisma.MenuItemWhereInput = {};
 
-    if (filters.categoryId) {
-      where.categoryId = filters.categoryId;
-    }
-
-    if (typeof filters.availability === 'boolean') {
-      where.availability = filters.availability;
-    }
-
     if (filters.search?.trim()) {
-      where.name = {
-        contains: filters.search.trim(),
-        mode: 'insensitive',
-      };
+      where.name = { contains: filters.search.trim(), mode: 'insensitive' };
+    }
+
+    if (filters.category) {
+      where.categoryId = filters.category;
+    }
+
+    if (filters.available !== undefined && filters.available !== '') {
+      where.availability = filters.available === 'true';
     }
 
     return this.prisma.menuItem.findMany({
       where,
-      include: categoryInclude,
+      include: { category: true },
       orderBy: { name: 'asc' },
     });
   }
