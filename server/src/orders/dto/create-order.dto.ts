@@ -7,5 +7,5 @@ export class CreateOrderDto {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
-  items: { menuItemId: string; quantity: number }[];
+  items: CreateOrderItemDto[];
 }

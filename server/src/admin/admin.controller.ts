@@ -1,9 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
-import { AdminService } from './admin.service';
+import { AdminService, DashboardStats } from './admin.service';
 import { OrdersService } from '../orders/orders.service';
 
 @Controller('admin')
@@ -16,7 +16,7 @@ export class AdminController {
   ) {}
 
   @Get('dashboard')
-  getDashboard() {
+  getDashboard(): Promise<DashboardStats> {
     return this.adminService.getDashboardStats();
   }
 

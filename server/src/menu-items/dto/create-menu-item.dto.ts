@@ -7,6 +7,7 @@ import {
   Min,
   MaxLength,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateMenuItemDto {
   @IsString()
@@ -17,6 +18,7 @@ export class CreateMenuItemDto {
   @IsString()
   description?: string;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   price: number;

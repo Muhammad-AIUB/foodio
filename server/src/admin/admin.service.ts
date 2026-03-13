@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,6 +11,8 @@ export interface DashboardStats {
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getDashboardStats(): Promise<DashboardStats> {
@@ -22,11 +24,8 @@ export class AdminService {
         this.prisma.order.count({ where: { status: OrderStatus.Pending } }),
       ]);
 
-    return {
-      totalOrders,
-      totalMenuItems,
-      totalCategories,
-      pendingOrders,
-    };
+    this.logger.log('Dashboard stats fetched');
+
+    return { totalOrders, totalMenuItems, totalCategories, pendingOrders };
   }
 }

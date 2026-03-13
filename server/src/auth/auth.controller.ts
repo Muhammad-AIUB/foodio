@@ -10,16 +10,16 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/signin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { User } from '@prisma/client';
-import { AuthResponse } from './auth.types';
+import type { SafeUser } from '../users/users.service';
 
 const COOKIE_NAME = 'access_token';
-const MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24h
+const MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24 h
 
 @Controller('auth')
 export class AuthController {
@@ -28,25 +28,14 @@ export class AuthController {
     private readonly config: ConfigService,
   ) {}
 
-  private setTokenCookie(res: Response, token: string): void {
-    const isProd = this.config.get('NODE_ENV') === 'production';
-    res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'lax',
-      maxAge: MAX_AGE_MS,
-      path: '/',
-    });
-  }
-
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Omit<AuthResponse, 'accessToken'>> {
-    const { accessToken, ...rest } = await this.authService.register(dto);
+  ): Promise<{ user: SafeUser }> {
+    const { accessToken, user } = await this.authService.register(dto);
     this.setTokenCookie(res, accessToken);
-    return rest;
+    return { user };
   }
 
   @HttpCode(HttpStatus.OK)
@@ -54,10 +43,10 @@ export class AuthController {
   async signIn(
     @Body() dto: SignInDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Omit<AuthResponse, 'accessToken'>> {
-    const { accessToken, ...rest } = await this.authService.signIn(dto);
+  ): Promise<{ user: SafeUser }> {
+    const { accessToken, user } = await this.authService.signIn(dto);
     this.setTokenCookie(res, accessToken);
-    return rest;
+    return { user };
   }
 
   @HttpCode(HttpStatus.OK)
@@ -74,7 +63,18 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@CurrentUser() user: User): Omit<User, 'password'> {
+  getProfile(@CurrentUser() user: User): SafeUser {
     return this.authService.sanitize(user);
+  }
+
+  private setTokenCookie(res: Response, token: string): void {
+    const isProd = this.config.get('NODE_ENV') === 'production';
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      maxAge: MAX_AGE_MS,
+      path: '/',
+    });
   }
 }

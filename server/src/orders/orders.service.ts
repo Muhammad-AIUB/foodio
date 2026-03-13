@@ -3,50 +3,80 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { OrderStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { SAFE_USER_SELECT } from '../users/users.service';
 
-const orderInclude = {
-  orderItems: {
-    include: { menuItem: true },
+const ORDER_ITEM_SELECT = {
+  id: true,
+  menuItemId: true,
+  quantity: true,
+  priceSnapshot: true,
+  menuItem: {
+    select: { id: true, name: true, imageUrl: true, price: true },
   },
-};
+} as const;
 
-const adminOrderInclude = {
-  user: { select: { id: true, name: true, email: true } },
-  orderItems: {
-    include: { menuItem: true },
-  },
-};
+const ORDER_SELECT = {
+  id: true,
+  userId: true,
+  totalPrice: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  orderItems: { select: ORDER_ITEM_SELECT },
+} as const;
+
+const ADMIN_ORDER_SELECT = {
+  ...ORDER_SELECT,
+  user: { select: SAFE_USER_SELECT },
+} as const;
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Create an order inside a single transaction.
+   *
+   * Complexity: O(n) where n = number of distinct items.
+   *  - One bulk query to fetch all menu items.
+   *  - One Map for O(1) lookups per item.
+   *  - One pass to build order items and compute total.
+   */
   async create(userId: string, dto: CreateOrderDto) {
     const menuItemIds = [...new Set(dto.items.map((i) => i.menuItemId))];
 
     return this.prisma.$transaction(async (tx) => {
       const menuItems = await tx.menuItem.findMany({
         where: { id: { in: menuItemIds } },
+        select: { id: true, price: true, availability: true, name: true },
       });
 
-      const foundIds = new Set(menuItems.map((m) => m.id));
-      const missingIds = menuItemIds.filter((id) => !foundIds.has(id));
       if (menuItems.length !== menuItemIds.length) {
-        throw new NotFoundException('One or more menu items do not exist');
-      }
-
-      const unavailable = menuItems.filter((m) => !m.availability);
-      if (unavailable.length) {
-        throw new BadRequestException(
-          'One or more items are currently unavailable',
+        const foundIds = new Set(menuItems.map((m) => m.id));
+        const missing = menuItemIds.filter((id) => !foundIds.has(id));
+        throw new NotFoundException(
+          `Menu item(s) not found: ${missing.join(', ')}`,
         );
       }
 
-      const menuItemMap = new Map(menuItems.map((m) => [m.id, m]));
+      const unavailable = menuItems.filter((m) => !m.availability);
+      if (unavailable.length > 0) {
+        throw new BadRequestException(
+          `Unavailable item(s): ${unavailable.map((m) => m.name).join(', ')}`,
+        );
+      }
+
+      const priceMap = new Map(
+        menuItems.map((m) => [m.id, Number(m.price)]),
+      );
+
       let totalPrice = 0;
       const orderItemsData: {
         menuItemId: string;
@@ -55,8 +85,7 @@ export class OrdersService {
       }[] = [];
 
       for (const item of dto.items) {
-        const menuItem = menuItemMap.get(item.menuItemId)!;
-        const price = Number(menuItem.price);
+        const price = priceMap.get(item.menuItemId)!;
         totalPrice += price * item.quantity;
         orderItemsData.push({
           menuItemId: item.menuItemId,
@@ -65,24 +94,28 @@ export class OrdersService {
         });
       }
 
-      return tx.order.create({
+      const order = await tx.order.create({
         data: {
           userId,
           totalPrice,
           status: OrderStatus.Pending,
-          orderItems: {
-            create: orderItemsData,
-          },
+          orderItems: { create: orderItemsData },
         },
-        include: orderInclude,
+        select: ORDER_SELECT,
       });
+
+      this.logger.log(
+        `Order ${order.id} placed by user ${userId} — total: ${totalPrice.toString()}`,
+      );
+
+      return order;
     });
   }
 
   async findMyOrders(userId: string) {
     return this.prisma.order.findMany({
       where: { userId },
-      include: orderInclude,
+      select: ORDER_SELECT,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -90,50 +123,53 @@ export class OrdersService {
   async findOne(id: string, userId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      include: orderInclude,
+      select: ORDER_SELECT,
     });
+
     if (!order) {
       throw new NotFoundException(`Order with id "${id}" not found`);
     }
     if (order.userId !== userId) {
       throw new ForbiddenException('You are not allowed to view this order');
     }
+
     return order;
   }
 
-  async findAll(userId: string, userRole: string) {
-    const where =
-      userRole === 'ADMIN' ? {} : { userId };
-
+  async findAll(userId: string, userRole: UserRole) {
+    const where = userRole === UserRole.ADMIN ? {} : { userId };
     return this.prisma.order.findMany({
       where,
-      include: orderInclude,
+      select: ORDER_SELECT,
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async findAllForAdmin() {
     return this.prisma.order.findMany({
-      include: adminOrderInclude,
+      select: ADMIN_ORDER_SELECT,
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async updateStatus(id: string, status: OrderStatus) {
     try {
-      return await this.prisma.order.update({
+      const order = await this.prisma.order.update({
         where: { id },
         data: { status },
-        include: orderInclude,
+        select: ORDER_SELECT,
       });
-    } catch (e) {
+
+      this.logger.log(`Order ${id} status → ${status}`);
+      return order;
+    } catch (error) {
       if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
       ) {
         throw new NotFoundException(`Order with id "${id}" not found`);
       }
-      throw e;
+      throw error;
     }
   }
 }

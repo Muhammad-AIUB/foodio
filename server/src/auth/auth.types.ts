@@ -1,6 +1,6 @@
-import { User } from '@prisma/client';
+import { SafeUser } from '../users/users.service';
 
 export interface AuthResponse {
   accessToken: string;
-  user: Omit<User, 'password'>;
+  user: SafeUser;
 }

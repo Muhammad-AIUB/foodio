@@ -7,11 +7,12 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { User, UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { User, UserRole } from '@prisma/client';
+import { StrictParseUUIDPipe } from '../common/pipes/parse-uuid.pipe';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -40,7 +41,10 @@ export class OrdersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  findOne(@Param('id') id: string, @CurrentUser() user: User) {
+  findOne(
+    @Param('id', StrictParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
     return this.ordersService.findOne(id, user.id);
   }
 
@@ -48,7 +52,7 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   updateStatus(
-    @Param('id') id: string,
+    @Param('id', StrictParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
     return this.ordersService.updateStatus(id, dto.status);
