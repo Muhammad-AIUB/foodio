@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
-  app.use(cookieParser() as Parameters<typeof app.use>[0]);
+  app.use(cookieParser());
   app.use(helmet());
   app.enableCors({
     origin: config.get<string>('CLIENT_URL') ?? '*',
