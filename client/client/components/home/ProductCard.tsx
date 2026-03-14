@@ -11,10 +11,8 @@ interface ProductCardProps {
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   return (
     <div className="relative overflow-visible rounded-3xl bg-[#FCFAF6] px-6 pt-20 pb-16 shadow-md transition-shadow hover:shadow-lg">
-      {/* Overlapping plate - breaks out of top */}
       <div className="absolute left-1/2 top-0 h-28 w-28 -translate-x-1/2 -translate-y-1/2">
         <div className="relative h-full w-full overflow-hidden rounded-full bg-gradient-to-br from-amber-100 to-orange-100 shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={product.image}
             alt={product.name}
@@ -27,7 +25,6 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
       <p className="mt-2 line-clamp-2 text-center text-sm text-gray-500">{product.description}</p>
       <p className="mt-3 text-center text-xl font-bold text-[#1A362D]">${product.price.toFixed(2)}</p>
 
-      {/* Overlapping Add to Cart - breaks out of bottom-right */}
       <button
         type="button"
         onClick={() => onAddToCart?.(product.id)}

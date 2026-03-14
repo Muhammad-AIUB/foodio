@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import type { OrderStatus } from "@/data/orders";
+import type { OrderStatus } from "@/lib/types";
 
 interface StatusDropdownProps {
   value: OrderStatus;
@@ -9,10 +9,10 @@ interface StatusDropdownProps {
 }
 
 const statuses: { value: OrderStatus; label: string }[] = [
-  { value: "pending", label: "Pending" },
-  { value: "preparing", label: "Preparing" },
-  { value: "ready", label: "Ready" },
-  { value: "completed", label: "Completed" },
+  { value: "Pending", label: "Pending" },
+  { value: "Preparing", label: "Preparing" },
+  { value: "Ready", label: "Ready" },
+  { value: "Completed", label: "Completed" },
 ];
 
 export default function StatusDropdown({

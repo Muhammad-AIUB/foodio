@@ -1,11 +1,12 @@
 "use client";
 
 import { SquarePen, Trash2 } from "lucide-react";
+import type { CategoryApi } from "@/lib/types";
 
 interface CategoriesTableProps {
-  categories: string[];
-  onEdit: (name: string) => void;
-  onDelete: (name: string) => void;
+  categories: CategoryApi[];
+  onEdit: (category: CategoryApi) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function CategoriesTable({
@@ -27,26 +28,26 @@ export default function CategoriesTable({
           </tr>
         </thead>
         <tbody>
-          {categories.map((name, index) => (
+          {categories.map((cat, index) => (
             <tr
-              key={name}
+              key={cat.id}
               className={
                 index < categories.length - 1 ? "border-b border-gray-100" : ""
               }
             >
               <td className="px-6 py-4 text-sm font-medium text-text-dark">
-                {name}
+                {cat.name}
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center justify-end gap-3">
                   <button
-                    onClick={() => onEdit(name)}
+                    onClick={() => onEdit(cat)}
                     className="text-text-muted hover:text-primary transition-colors"
                   >
                     <SquarePen className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => onDelete(name)}
+                    onClick={() => onDelete(cat.id)}
                     className="text-red-400 hover:text-red-600 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />

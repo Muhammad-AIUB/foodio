@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AlignJustify, ClipboardList, LogOut } from "lucide-react";
+import { api } from "@/lib/axios";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const navItems = [
   { name: "Menu Items", href: "/admin/menu", icon: AlignJustify },
@@ -12,10 +14,18 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleSignOut = async () => {
+    await logout();
+    router.push("/sign-in");
+    router.refresh();
+  };
 
   return (
     <aside className="w-[220px] min-h-screen bg-white border-r border-gray-100 flex flex-col px-4 py-6">
-      {/* Logo */}
       <div className="flex items-center gap-2 mb-8 px-2">
         <Image
           src="/images/logo.jpeg"
@@ -29,7 +39,6 @@ export default function AdminSidebar() {
         </span>
       </div>
 
-      {/* Navigation */}
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const isActive =
@@ -51,9 +60,11 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      {/* Sign Out */}
       <div className="mt-auto pt-6 border-t border-gray-100">
-        <button className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors w-full">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors w-full"
+        >
           <LogOut className="w-4 h-4" />
           Sign Out
         </button>

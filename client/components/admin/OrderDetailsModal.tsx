@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Order } from "@/data/orders";
+import type { OrderApi } from "@/lib/types";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  order: Order | null;
+  order: OrderApi | null;
 }
 
 export default function OrderDetailsModal({
@@ -56,7 +56,6 @@ export default function OrderDetailsModal({
             transition={{ duration: 0.2 }}
             className="relative w-full max-w-md bg-cream rounded-3xl p-8 shadow-xl"
           >
-            {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="font-serif text-2xl font-bold text-primary italic">
@@ -72,43 +71,41 @@ export default function OrderDetailsModal({
               </button>
             </div>
 
-            {/* Address */}
-            <div className="pb-4 mb-4 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-text-dark mb-1">
-                Address
-              </h3>
-              <p className="text-sm text-text-muted">
-                {order.deliveryAddress}
-              </p>
-            </div>
+            {order.user && (
+              <div className="pb-4 mb-4 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-text-dark mb-1">
+                  Customer
+                </h3>
+                <p className="text-sm text-text-muted">{order.user.name}</p>
+                <p className="text-sm text-text-muted">{order.user.email}</p>
+              </div>
+            )}
 
-            {/* Items */}
             <div className="pb-4 mb-4 border-b border-gray-200">
               <h3 className="text-sm font-semibold text-text-dark mb-3">
                 Items
               </h3>
               <div className="space-y-2">
-                {order.items.map((item, index) => (
+                {order.orderItems?.map((item) => (
                   <div
-                    key={index}
+                    key={item.id}
                     className="flex items-center justify-between"
                   >
                     <span className="text-sm text-text-dark">
-                      {item.quantity}x {item.name}
+                      {item.quantity}x {item.menuItem?.name ?? "Item"}
                     </span>
                     <span className="text-sm text-text-dark">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${(Number(item.priceSnapshot) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Total */}
             <div className="flex items-center justify-between">
               <span className="text-base font-bold text-text-dark">Total</span>
               <span className="text-base font-bold text-text-dark">
-                ${order.totalAmount.toFixed(2)}
+                ${Number(order.totalPrice).toFixed(2)}
               </span>
             </div>
           </motion.div>

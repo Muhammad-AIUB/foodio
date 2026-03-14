@@ -38,7 +38,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -47,7 +46,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
             className="absolute inset-0 bg-black/40"
             onClick={onClose}
           />
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -55,7 +53,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
             transition={{ duration: 0.2 }}
             className="relative w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-serif text-2xl font-bold text-primary italic">
                 Cart
@@ -65,7 +62,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
               </span>
             </div>
 
-            {/* Empty State */}
             {items.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-text-muted text-lg">Your cart is empty</p>
@@ -75,14 +71,11 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
               </div>
             )}
 
-            {/* Cart Items */}
             <div className="space-y-0">
               {items.map((item, index) => (
                 <div key={item.name}>
                   <div className="py-5">
-                    {/* Item Info Row */}
                     <div className="flex items-center gap-4 mb-4">
-                      {/* Circular Image */}
                       <div className="relative w-[60px] h-[60px] rounded-full overflow-hidden shadow-md flex-shrink-0">
                         <Image
                           src={item.image}
@@ -92,7 +85,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                           sizes="60px"
                         />
                       </div>
-                      {/* Name & Quantity */}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-sans font-bold text-text-dark text-base">
                           {item.name}
@@ -101,7 +93,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                           Quantity : {item.quantity}
                         </p>
                       </div>
-                      {/* Delete Button */}
                       <button
                         onClick={() => removeItem(item.name)}
                         className="p-2 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
@@ -110,7 +101,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                       </button>
                     </div>
 
-                    {/* Quantity Controls & Price Row */}
                     <div className="flex items-center justify-between pl-[76px]">
                       <div className="flex items-center gap-2">
                         <button
@@ -140,7 +130,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                     </div>
                   </div>
 
-                  {/* Divider */}
                   {index < items.length - 1 && (
                     <div className="border-b border-gray-200" />
                   )}
@@ -148,7 +137,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
               ))}
             </div>
 
-            {/* Total Amount */}
             {items.length > 0 && (
               <>
                 <div className="border-t border-gray-200 mt-2 pt-5">
@@ -162,7 +150,6 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                   </div>
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-4 mt-8">
                   <button
                     onClick={onClose}

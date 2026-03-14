@@ -51,7 +51,6 @@ export default function QuantityModal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -60,7 +59,6 @@ export default function QuantityModal({
             className="absolute inset-0 bg-black/40"
             onClick={onClose}
           />
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -68,7 +66,6 @@ export default function QuantityModal({
             transition={{ duration: 0.2 }}
             className="relative w-full max-w-md bg-cream rounded-3xl p-8 shadow-xl"
           >
-            {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <h2 className="font-serif text-2xl font-bold text-primary">
                 Select the quantity
@@ -81,12 +78,10 @@ export default function QuantityModal({
               </button>
             </div>
 
-            {/* Items label */}
             <div className="border-b border-gray-200 pb-2 mb-4">
               <span className="text-sm text-text-muted">Items</span>
             </div>
 
-            {/* Item row */}
             <div className="flex items-center justify-between mb-8">
               <span className="font-semibold text-text-dark text-lg">
                 {itemName}
@@ -118,7 +113,6 @@ export default function QuantityModal({
               </div>
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-4">
               <button
                 onClick={onClose}

@@ -102,7 +102,6 @@ export default function AddEditItemModal({
             transition={{ duration: 0.2 }}
             className="relative w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-serif text-2xl font-bold text-primary italic">
                 {item ? "Edit Item" : "Add New Item"}
@@ -116,7 +115,6 @@ export default function AddEditItemModal({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name + Price */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-text-dark mb-1.5">
@@ -144,7 +142,6 @@ export default function AddEditItemModal({
                 </div>
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-semibold text-text-dark mb-1.5">
                   Category
@@ -162,7 +159,6 @@ export default function AddEditItemModal({
                 </select>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-sm font-semibold text-text-dark mb-1.5">
                   Description
@@ -175,7 +171,6 @@ export default function AddEditItemModal({
                 />
               </div>
 
-              {/* Image Upload */}
               <div>
                 <label className="block text-sm font-semibold text-text-dark mb-1.5">
                   Image
@@ -188,14 +183,12 @@ export default function AddEditItemModal({
                 />
               </div>
 
-              {/* Available Toggle */}
               <ToggleSwitch
                 checked={available}
                 onChange={setAvailable}
                 label="Available for Order"
               />
 
-              {/* Save Button */}
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"

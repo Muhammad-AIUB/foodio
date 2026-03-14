@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { CartProvider } from "@/components/CartContext";
+import AuthInit from "@/components/AuthInit";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -29,7 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <AuthInit />
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

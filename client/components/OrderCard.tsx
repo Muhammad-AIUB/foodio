@@ -1,8 +1,8 @@
 "use client";
 
-import { Order, OrderStatus } from "@/data/orders";
+import type { OrderApi, OrderStatus } from "@/lib/types";
 
-const STATUS_STEPS: OrderStatus[] = ["pending", "preparing", "ready", "completed"];
+const STATUS_STEPS: OrderStatus[] = ["Pending", "Preparing", "Ready", "Completed"];
 const STATUS_LABELS = ["PENDING", "PREPARING", "READY", "COMPLETED"];
 
 function getStepIndex(status: OrderStatus): number {
@@ -10,14 +10,16 @@ function getStepIndex(status: OrderStatus): number {
 }
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const isPending = status === "pending";
-  const label = isPending ? "Pending" : "Completed";
+  const isPending = status !== "Completed";
+  const label = isPending ? "In progress" : "Completed";
   const classes = isPending
     ? "border-orange-400 text-orange-500"
     : "border-green-500 text-green-600";
 
   return (
-    <span className={`rounded-full border px-3 py-1 text-sm font-medium ${classes}`}>
+    <span
+      className={`rounded-full border px-3 py-1 text-sm font-medium ${classes}`}
+    >
       {label}
     </span>
   );
@@ -66,67 +68,66 @@ function OrderStepper({ status }: { status: OrderStatus }) {
   );
 }
 
-export default function OrderCard({ order }: { order: Order }) {
+export default function OrderCard({ order }: { order: OrderApi }) {
+  const total = Number(order.totalPrice);
+  const placedAt = order.createdAt;
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-text-dark">
-            Order #{order.id}
-          </h3>
+          <h3 className="text-lg font-bold text-text-dark">Order #{order.id.slice(0, 8)}</h3>
           <p className="mt-0.5 text-sm text-text-muted">
-            Placed on {new Date(order.placedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} at {new Date(order.placedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+            Placed on{" "}
+            {new Date(placedAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}{" "}
+            at{" "}
+            {new Date(placedAt).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xl font-bold text-text-dark">
-            ${order.totalAmount.toFixed(2)}
+            ${total.toFixed(2)}
           </span>
           <StatusBadge status={order.status} />
         </div>
       </div>
 
-      {/* Items */}
       <div className="mt-6">
         <p className="text-xs font-semibold tracking-wider text-text-muted">
           ITEMS
         </p>
         <div className="mt-3 space-y-2">
-          {order.items.map((item, idx) => (
+          {order.orderItems?.map((item) => (
             <div
-              key={idx}
+              key={item.id}
               className="flex items-center justify-between text-sm"
             >
               <span className="font-medium text-text-dark">
-                {item.quantity}x {item.name}
+                {item.quantity}x {item.menuItem?.name ?? "Item"}
               </span>
               <span className="text-text-dark">
-                ${item.price.toFixed(2)}
+                $
+                {(Number(item.priceSnapshot) * item.quantity).toFixed(2)}
               </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Total */}
       <div className="mt-4 flex justify-end border-t border-gray-100 pt-4">
         <p className="text-base font-bold text-text-dark">
-          Total Amount : ${order.totalAmount.toFixed(2)}
+          Total Amount : ${total.toFixed(2)}
         </p>
       </div>
 
-      {/* Delivery Address */}
-      <div className="mt-4">
-        <span className="text-sm font-semibold text-text-dark">
-          Delivering to:
-        </span>{" "}
-        <span className="text-sm text-text-muted">
-          {order.deliveryAddress}
-        </span>
-      </div>
-
-      {/* Stepper */}
       <OrderStepper status={order.status} />
     </div>
   );

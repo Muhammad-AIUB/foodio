@@ -1,12 +1,12 @@
 "use client";
 
-import type { Order, OrderStatus } from "@/data/orders";
+import type { OrderApi, OrderStatus } from "@/lib/types";
 import StatusDropdown from "./StatusDropdown";
 
 interface OrdersTableProps {
-  orders: Order[];
+  orders: OrderApi[];
   onStatusChange: (id: string, status: OrderStatus) => void;
-  onViewDetails: (order: Order) => void;
+  onViewDetails: (order: OrderApi) => void;
 }
 
 function formatDate(isoString: string): string {
@@ -65,13 +65,13 @@ export default function OrdersTable({
                 {order.id.substring(0, 8)}...
               </td>
               <td className="px-6 py-4 text-sm text-text-dark">
-                {formatDate(order.placedAt)}
+                {formatDate(order.createdAt)}
               </td>
               <td className="px-6 py-4 text-sm text-text-dark">
-                {order.customer}
+                {order.user?.name ?? "—"}
               </td>
               <td className="px-6 py-4 text-sm text-text-dark">
-                ${order.totalAmount.toFixed(2)}
+                ${Number(order.totalPrice).toFixed(2)}
               </td>
               <td className="px-6 py-4">
                 <StatusDropdown

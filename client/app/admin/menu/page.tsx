@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
-import { adminMenuItems, adminCategories, type AdminFoodItem } from "@/data/menuItems";
+import { api } from "@/lib/axios";
+import type { MenuItemApi, CategoryApi } from "@/lib/types";
+import type { AdminFoodItem } from "@/data/menuItems";
 import AdminTabSwitcher from "@/components/admin/AdminTabSwitcher";
 import MenuItemsTable from "@/components/admin/MenuItemsTable";
 import CategoriesTable from "@/components/admin/CategoriesTable";
@@ -14,20 +16,58 @@ const tabs = [
   { key: "categories", label: "Categories" },
 ];
 
+function mapToAdminItem(m: MenuItemApi): AdminFoodItem {
+  return {
+    id: m.id,
+    name: m.name,
+    description: m.description ?? "",
+    price: Number(m.price),
+    image: m.imageUrl ?? "/images/image1.jpeg",
+    category: m.category?.name ?? "",
+    categoryId: m.categoryId,
+    status: m.availability ? "available" : "unavailable",
+  };
+}
+
 export default function AdminMenuPage() {
   const [activeTab, setActiveTab] = useState("items");
-  const [menuItems, setMenuItems] = useState<AdminFoodItem[]>(adminMenuItems);
-  const [categories, setCategories] = useState<string[]>(adminCategories);
+  const [menuItems, setMenuItems] = useState<AdminFoodItem[]>([]);
+  const [categories, setCategories] = useState<CategoryApi[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Item modal state
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AdminFoodItem | null>(null);
-
-  // Category modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryApi | null>(null);
 
-  // Item handlers
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [itemsRes, catsRes] = await Promise.all([
+        api.get<{ data: MenuItemApi[] }>("/menu-items"),
+        api.get<{ data: CategoryApi[] }>("/categories"),
+      ]);
+      const items = itemsRes.data?.data ?? itemsRes.data ?? [];
+      const cats = catsRes.data?.data ?? catsRes.data ?? [];
+      setMenuItems(Array.isArray(items) ? items.map(mapToAdminItem) : []);
+      setCategories(Array.isArray(cats) ? cats : []);
+    } catch {
+      setError("Failed to load menu data");
+      setMenuItems([]);
+      setCategories([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const categoryNames = categories.map((c) => c.name);
+
   const handleAddItem = () => {
     setEditingItem(null);
     setIsItemModalOpen(true);
@@ -38,60 +78,100 @@ export default function AdminMenuPage() {
     setIsItemModalOpen(true);
   };
 
-  const handleSaveItem = (item: AdminFoodItem) => {
-    if (editingItem) {
-      setMenuItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));
-    } else {
-      setMenuItems((prev) => [...prev, item]);
+  const handleSaveItem = async (item: AdminFoodItem) => {
+    try {
+      const cat = categories.find((c) => c.name === item.category || c.id === item.categoryId);
+      const categoryId = cat?.id ?? categories[0]?.id;
+      if (!categoryId) return;
+      if (editingItem) {
+        await api.patch(`/menu-items/${item.id}`, {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          imageUrl: item.image,
+          availability: item.status === "available",
+          categoryId,
+        });
+      } else {
+        await api.post("/menu-items", {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          imageUrl: item.image,
+          availability: item.status === "available",
+          categoryId,
+        });
+      }
+      fetchData();
+      setIsItemModalOpen(false);
+      setEditingItem(null);
+    } catch {
+      setError("Failed to save item");
     }
-    setIsItemModalOpen(false);
-    setEditingItem(null);
   };
 
-  const handleDeleteItem = (id: string) => {
-    setMenuItems((prev) => prev.filter((i) => i.id !== id));
+  const handleDeleteItem = async (id: string) => {
+    try {
+      await api.delete(`/menu-items/${id}`);
+      setMenuItems((prev) => prev.filter((i) => i.id !== id));
+    } catch {
+      setError("Failed to delete item");
+    }
   };
 
-  // Category handlers
   const handleAddCategory = () => {
     setEditingCategory(null);
     setIsCategoryModalOpen(true);
   };
 
-  const handleEditCategory = (name: string) => {
-    setEditingCategory(name);
+  const handleEditCategory = (cat: CategoryApi) => {
+    setEditingCategory(cat);
     setIsCategoryModalOpen(true);
   };
 
-  const handleSaveCategory = (name: string) => {
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((c) => (c === editingCategory ? name : c))
-      );
-      setMenuItems((prev) =>
-        prev.map((item) =>
-          item.category === editingCategory
-            ? { ...item, category: name }
-            : item
-        )
-      );
-    } else {
-      setCategories((prev) => [...prev, name]);
+  const handleSaveCategory = async (name: string) => {
+    try {
+      if (editingCategory) {
+        await api.patch(`/categories/${editingCategory.id}`, { name });
+      } else {
+        await api.post("/categories", { name });
+      }
+      fetchData();
+      setIsCategoryModalOpen(false);
+      setEditingCategory(null);
+    } catch {
+      setError("Failed to save category");
     }
-    setIsCategoryModalOpen(false);
-    setEditingCategory(null);
   };
 
-  const handleDeleteCategory = (name: string) => {
-    setCategories((prev) => prev.filter((c) => c !== name));
-    setMenuItems((prev) => prev.filter((i) => i.category !== name));
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await api.delete(`/categories/${id}`);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+    } catch {
+      setError("Failed to delete category");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <>
       <h1 className="font-serif text-3xl font-bold text-primary italic mb-8">
         Menu Items
       </h1>
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+          {error}
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-6">
         <AdminTabSwitcher
@@ -141,7 +221,7 @@ export default function AdminMenuPage() {
         }}
         onSave={handleSaveItem}
         item={editingItem}
-        categories={categories}
+        categories={categoryNames}
       />
 
       <AddEditCategoryModal

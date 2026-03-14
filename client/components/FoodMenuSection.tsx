@@ -1,35 +1,81 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import FoodCard from "./FoodCard";
-import { foodItems, categoryNames } from "@/data/menuItems";
+import { api } from "@/lib/axios";
+import type { MenuItemApi, CategoryApi } from "@/lib/types";
+
+interface FoodItemView {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+}
 
 export default function FoodMenuSection() {
+  const [menuItems, setMenuItems] = useState<MenuItemApi[]>([]);
+  const [categories, setCategories] = useState<CategoryApi[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredItems = useMemo(() => {
-    let items =
-      activeCategory === "All"
-        ? Object.values(foodItems).flat()
-        : foodItems[activeCategory] || [];
+  useEffect(() => {
+    Promise.all([
+      api.get<{ data: MenuItemApi[] }>("/menu-items"),
+      api.get<{ data: CategoryApi[] }>("/categories"),
+    ])
+      .then(([itemsRes, catsRes]) => {
+        const items = itemsRes.data?.data ?? itemsRes.data ?? [];
+        const cats = catsRes.data?.data ?? catsRes.data ?? [];
+        setMenuItems(Array.isArray(items) ? items : []);
+        setCategories(Array.isArray(cats) ? cats : []);
+      })
+      .catch(() => {
+        setMenuItems([]);
+        setCategories([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      items = items.filter((item) =>
-        item.name.toLowerCase().includes(query)
+  const categoryNames = useMemo(
+    () => ["All", ...categories.map((c) => c.name)],
+    [categories]
+  );
+
+  const filteredItems = useMemo(() => {
+    let items = menuItems;
+    if (activeCategory !== "All") {
+      items = items.filter(
+        (i) => i.category?.name?.toLowerCase() === activeCategory.toLowerCase()
       );
     }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((i) => i.name.toLowerCase().includes(q));
+    }
+    return items.map((m): FoodItemView => ({
+      name: m.name,
+      description: m.description ?? "",
+      price: `$${Number(m.price).toFixed(2)}`,
+      image: m.imageUrl ?? "/images/image1.jpeg",
+    }));
+  }, [menuItems, activeCategory, searchQuery]);
 
-    return items;
-  }, [activeCategory, searchQuery]);
+  if (loading) {
+    return (
+      <section className="py-16 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 flex justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 sm:py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,14 +90,12 @@ export default function FoodMenuSection() {
           </p>
         </motion.div>
 
-        {/* Filter Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12"
         >
-          {/* Category Pills */}
           <div className="flex flex-wrap gap-2">
             {categoryNames.map((cat) => {
               const isActive = activeCategory === cat;
@@ -71,7 +115,6 @@ export default function FoodMenuSection() {
             })}
           </div>
 
-          {/* Search & Sort */}
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -90,7 +133,6 @@ export default function FoodMenuSection() {
           </div>
         </motion.div>
 
-        {/* Food Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6">
           {filteredItems.map((item, index) => (
             <FoodCard key={`${item.name}-${index}`} {...item} index={index % 4} animateOnLoad />

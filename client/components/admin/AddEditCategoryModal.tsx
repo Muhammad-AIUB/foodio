@@ -5,11 +5,13 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import type { CategoryApi } from "@/lib/types";
+
 interface AddEditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (name: string) => void;
-  category: string | null;
+  category: CategoryApi | null;
 }
 
 export default function AddEditCategoryModal({
@@ -25,7 +27,7 @@ export default function AddEditCategoryModal({
 
   useEffect(() => {
     if (isOpen) {
-      setName(category || "");
+      setName(category?.name ?? "");
     }
   }, [isOpen, category]);
 
