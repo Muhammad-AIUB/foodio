@@ -5,11 +5,10 @@ import { hashPassword, verifyPassword } from './utils/password.util';
 import {
   UsersService,
   SafeUser,
-  SAFE_USER_SELECT,
 } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/signin.dto';
-import { AuthResponse } from './auth.types';
+import { AuthResponse, RegisterResponse } from './auth.types';
 import { CreateUserInput } from '../users/dto/create-user.dto';
 
 const SALT_ROUNDS = 12;
@@ -23,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
+  async register(dto: RegisterDto): Promise<RegisterResponse> {
     const hashed = await hashPassword(dto.password, SALT_ROUNDS);
     const input: CreateUserInput = {
       name: dto.name,
@@ -32,7 +31,10 @@ export class AuthService {
     };
     const user = await this.usersService.create(input);
     this.logger.log(`User registered: ${user.email}`);
-    return this.buildAuthResponse(user);
+    return {
+      success: true,
+      message: 'Registration successful',
+    };
   }
 
   async signIn(dto: SignInDto): Promise<AuthResponse> {

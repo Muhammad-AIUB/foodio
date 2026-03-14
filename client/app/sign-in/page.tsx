@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import Footer from "@/components/Footer";
-import { api } from "@/lib/axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { AxiosError } from "axios";
 
@@ -20,7 +19,7 @@ function getErrorMessage(err: unknown): string {
 export default function SignInPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
-  const setUser = useAuthStore((s) => s.setUser);
+  const register = useAuthStore((s) => s.register);
   const [activeTab, setActiveTab] = useState<"signin" | "register">("signin");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -32,6 +31,13 @@ export default function SignInPage() {
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+
+  useEffect(() => {
+    const message = window.sessionStorage.getItem("auth_success_message");
+    if (!message) return;
+    setSuccessMessage(message);
+    window.sessionStorage.removeItem("auth_success_message");
+  }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,20 +70,12 @@ export default function SignInPage() {
     setSuccessMessage("");
     setLoading(true);
     try {
-      const { data } = await api.post<{ data: { user: { id: string; email: string; name: string; role: string } } }>(
-        "/auth/register",
-        { name: regName, email: regEmail, password: regPassword }
-      );
-      const raw = data?.data?.user ?? (data as unknown as { user: { id: string; email: string; name: string; role: string } }).user;
-      const user = { id: raw.id, email: raw.email, name: raw.name, role: raw.role as "USER" | "ADMIN" };
-      setUser(user);
-      const role = user.role;
-      setSuccessMessage("Welcome back!");
-      if (role === "ADMIN") {
-        router.replace("/admin");
-      } else {
-        router.replace("/");
-      }
+      await register(regName, regEmail, regPassword);
+      const message = "Registration successful! Please log in.";
+      window.sessionStorage.setItem("auth_success_message", message);
+      setSuccessMessage(message);
+      setActiveTab("signin");
+      router.push("/sign-in");
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

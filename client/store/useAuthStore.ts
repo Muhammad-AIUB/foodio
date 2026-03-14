@@ -14,6 +14,7 @@ interface AuthState {
   isLoading: boolean;
   checkAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<AuthUser | null>;
+  register: (name: string, email: string, password: string) => Promise<{ success: true; message: string }>;
   setUser: (user: AuthUser | null) => void;
   logout: () => Promise<void>;
 }
@@ -52,6 +53,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       return null;
     }
+  },
+
+  register: async (name: string, email: string, password: string) => {
+    const { data } = await api.post<{ data?: { success: true; message: string }; success?: true; message?: string }>(
+      '/auth/register',
+      { name, email, password },
+    );
+    const payload = data?.data ?? data;
+    return {
+      success: true,
+      message: payload?.message ?? 'Registration successful',
+    };
   },
 
   setUser: (user) =>

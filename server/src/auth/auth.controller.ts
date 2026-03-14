@@ -17,6 +17,7 @@ import { SignInDto } from './dto/signin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { SafeUser } from '../users/users.service';
+import type { RegisterResponse } from './auth.types';
 
 const COOKIE_NAME = 'access_token';
 const MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24 h
@@ -29,13 +30,9 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<{ user: SafeUser }> {
-    const { accessToken, user } = await this.authService.register(dto);
-    this.setTokenCookie(res, accessToken);
-    return { user };
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() dto: RegisterDto): Promise<RegisterResponse> {
+    return this.authService.register(dto);
   }
 
   @HttpCode(HttpStatus.OK)
