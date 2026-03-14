@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AlignJustify, ClipboardList, LogOut } from "lucide-react";
-import { api } from "@/lib/axios";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const navItems = [
@@ -14,14 +13,11 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-
   const logout = useAuthStore((s) => s.logout);
 
   const handleSignOut = async () => {
     await logout();
-    router.push("/sign-in");
-    router.refresh();
+    window.location.href = "/sign-in";
   };
 
   return (

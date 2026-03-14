@@ -27,7 +27,7 @@ export default function AdminLayout({
     }
   }, [user, isLoading, router]);
 
-  if (isLoading) {
+  if (isLoading || !user || user.role !== 'ADMIN') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
@@ -36,10 +36,6 @@ export default function AdminLayout({
         </div>
       </div>
     );
-  }
-
-  if (!user || user.role !== 'ADMIN') {
-    return null;
   }
 
   return (

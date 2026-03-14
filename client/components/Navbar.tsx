@@ -81,7 +81,7 @@ export default function Navbar() {
             </button>
             {isAuthenticated && user ? (
               <>
-                {user.role === "ADMIN" && (
+                {user?.role === "ADMIN" && (
                   <Link
                     href="/admin"
                     className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-primary border border-primary hover:bg-accent transition-colors"
@@ -90,7 +90,7 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                 )}
-                {user.role === "USER" && (
+                {user?.role === "USER" && (
                   <Link
                     href="/my-orders"
                     className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-primary border border-primary hover:bg-accent transition-colors"
@@ -172,7 +172,7 @@ export default function Navbar() {
                 </button>
                 {isAuthenticated && user ? (
                   <>
-                    {user.role === "ADMIN" && (
+                    {user?.role === "ADMIN" && (
                       <Link
                         href="/admin"
                         onClick={() => setMobileOpen(false)}
@@ -182,7 +182,7 @@ export default function Navbar() {
                         Dashboard
                       </Link>
                     )}
-                    {user.role === "USER" && (
+                    {user?.role === "USER" && (
                       <Link
                         href="/my-orders"
                         onClick={() => setMobileOpen(false)}
