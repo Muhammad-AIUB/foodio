@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   private buildAuthResponse(user: User): AuthResponse {
-    const token = this.jwtService.sign({ sub: user.id, email: user.email });
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
     return { accessToken: token, user: this.sanitize(user) };
   }
 }

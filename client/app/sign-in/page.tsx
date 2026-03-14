@@ -19,9 +19,11 @@ function getErrorMessage(err: unknown): string {
 
 export default function SignInPage() {
   const router = useRouter();
+  const login = useAuthStore((s) => s.login);
   const setUser = useAuthStore((s) => s.setUser);
   const [activeTab, setActiveTab] = useState<"signin" | "register">("signin");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [signInEmail, setSignInEmail] = useState("");
@@ -34,15 +36,21 @@ export default function SignInPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
     setLoading(true);
     try {
-      const { data } = await api.post<{ data: { user: { id: string; email: string; name: string; role: string } } }>(
-        "/auth/signin",
-        { email: signInEmail, password: signInPassword }
-      );
-      const user = data?.data?.user ?? (data as unknown as { user: { id: string; email: string; name: string; role: string } }).user;
-      setUser({ id: user.id, email: user.email, name: user.name, role: user.role as "USER" | "ADMIN" });
-      router.push(user.role === "ADMIN" ? "/admin" : "/");
+      const user = await login(signInEmail, signInPassword);
+      if (!user) {
+        setError("Invalid email or password.");
+        return;
+      }
+      const role = user.role;
+      setSuccessMessage("Welcome back!");
+      if (role === "ADMIN") {
+        router.replace("/admin");
+      } else {
+        router.replace("/");
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -53,15 +61,23 @@ export default function SignInPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
     setLoading(true);
     try {
       const { data } = await api.post<{ data: { user: { id: string; email: string; name: string; role: string } } }>(
         "/auth/register",
         { name: regName, email: regEmail, password: regPassword }
       );
-      const user = data?.data?.user ?? (data as unknown as { user: { id: string; email: string; name: string; role: string } }).user;
-      setUser({ id: user.id, email: user.email, name: user.name, role: user.role as "USER" | "ADMIN" });
-      router.push(user.role === "ADMIN" ? "/admin" : "/");
+      const raw = data?.data?.user ?? (data as unknown as { user: { id: string; email: string; name: string; role: string } }).user;
+      const user = { id: raw.id, email: raw.email, name: raw.name, role: raw.role as "USER" | "ADMIN" };
+      setUser(user);
+      const role = user.role;
+      setSuccessMessage("Welcome back!");
+      if (role === "ADMIN") {
+        router.replace("/admin");
+      } else {
+        router.replace("/");
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -136,6 +152,11 @@ export default function SignInPage() {
           {error && (
             <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
+            </div>
+          )}
+          {successMessage && (
+            <div className="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+              {successMessage}
             </div>
           )}
           {activeTab === "signin" ? (

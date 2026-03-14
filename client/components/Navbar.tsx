@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { ShoppingCart, ArrowRight, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ShoppingCart, ArrowRight, Menu, X, LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartContext";
+import { useAuthStore } from "@/store/useAuthStore";
 import CartModal from "./CartModal";
 
 const navLinks = [
@@ -16,16 +17,26 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const pathname = usePathname();
   const { totalItems } = useCart();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileOpen(false);
+    router.push("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white/40 backdrop-blur-sm border-b border-gray-100/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image
               src="/images/logo.jpeg"
               alt="Foodio logo"
@@ -36,7 +47,7 @@ export default function Navbar() {
             <span className="font-serif text-2xl font-bold text-primary">
               Foodio.
             </span>
-          </div>
+          </Link>
 
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => {
@@ -69,13 +80,43 @@ export default function Navbar() {
                 </span>
               )}
             </button>
-            <Link
-              href="/sign-in"
-              className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-            >
-              Sign in
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {isAuthenticated && user ? (
+              <>
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-primary border border-primary hover:bg-accent transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                )}
+                {user.role === "USER" && (
+                  <Link
+                    href="/my-orders"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-primary border border-primary hover:bg-accent transition-colors"
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    My Orders
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/sign-in"
+                className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+              >
+                Sign in
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
 
           <button
@@ -118,7 +159,7 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-3 pt-2 flex-wrap">
                 <button
                   onClick={() => { setCartOpen(true); setMobileOpen(false); }}
                   className="relative p-2"
@@ -130,14 +171,46 @@ export default function Navbar() {
                     </span>
                   )}
                 </button>
-                <Link
-                  href="/sign-in"
-                  onClick={() => setMobileOpen(false)}
-                  className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2"
-                >
-                  Sign in
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {isAuthenticated && user ? (
+                  <>
+                    {user.role === "ADMIN" && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-primary bg-accent w-full"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        Dashboard
+                      </Link>
+                    )}
+                    {user.role === "USER" && (
+                      <Link
+                        href="/my-orders"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-primary bg-accent"
+                      >
+                        <ClipboardList className="w-4 h-4" />
+                        My Orders
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setMobileOpen(false)}
+                    className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2"
+                  >
+                    Sign in
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>

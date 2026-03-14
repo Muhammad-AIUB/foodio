@@ -16,9 +16,10 @@ async function bootstrap(): Promise<void> {
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({
-    origin: config.get<string>('CLIENT_URL') ?? '*',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    origin: config.get<string>('FRONTEND_URL') ?? config.get<string>('CLIENT_URL') ?? 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   app.setGlobalPrefix('api/v1');
 

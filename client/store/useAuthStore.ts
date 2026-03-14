@@ -13,11 +13,12 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   checkAuth: () => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser | null>;
   setUser: (user: AuthUser | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
@@ -30,6 +31,26 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
       set({ user: null, isAuthenticated: false, isLoading: false });
+    }
+  },
+
+  login: async (email: string, password: string) => {
+    try {
+      const { data } = await api.post<{ data: { user: AuthUser } }>('/auth/signin', {
+        email,
+        password,
+      });
+      const raw = data?.data?.user ?? (data as unknown as { user: AuthUser }).user;
+      const user: AuthUser = {
+        id: raw.id,
+        email: raw.email,
+        name: raw.name,
+        role: raw.role as 'USER' | 'ADMIN',
+      };
+      set({ user, isAuthenticated: true, isLoading: false });
+      return user;
+    } catch {
+      return null;
     }
   },
 
