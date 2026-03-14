@@ -41,14 +41,7 @@ export class OrdersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Create an order inside a single transaction.
-   *
-   * Complexity: O(n) where n = number of distinct items.
-   *  - One bulk query to fetch all menu items.
-   *  - One Map for O(1) lookups per item.
-   *  - One pass to build order items and compute total.
-   */
+
   async create(userId: string, dto: CreateOrderDto) {
     const menuItemIds = [...new Set(dto.items.map((i) => i.menuItemId))];
 

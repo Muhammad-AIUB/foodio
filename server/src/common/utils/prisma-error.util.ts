@@ -10,11 +10,7 @@ interface PrismaErrorContext {
   identifier?: string;
 }
 
-/**
- * Maps Prisma-specific error codes to meaningful NestJS HTTP exceptions.
- * Call this in a catch block to avoid repeating the same switch/if chains
- * across every service method.
- */
+
 export function handlePrismaError(
   error: unknown,
   ctx: PrismaErrorContext,
