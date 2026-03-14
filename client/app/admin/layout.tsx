@@ -22,7 +22,7 @@ export default function AdminLayout({
   useEffect(() => {
     if (isLoading) return;
     if (!user || user.role !== 'ADMIN') {
-      router.replace('/');
+      router.replace('/sign-in');
       return;
     }
   }, [user, isLoading, router]);

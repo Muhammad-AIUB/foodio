@@ -61,6 +61,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await api.post('/auth/signout');
     } catch {}
-    set({ user: null, isAuthenticated: false });
+    set({ user: null, isAuthenticated: false, isLoading: false });
   },
 }));

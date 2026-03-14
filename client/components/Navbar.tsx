@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ShoppingCart, ArrowRight, Menu, X, LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartContext";
@@ -17,7 +17,6 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -29,7 +28,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logout();
     setMobileOpen(false);
-    router.push("/");
+    window.location.href = "/sign-in";
   };
 
   return (
