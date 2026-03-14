@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="#1A3C34">
+  <!-- Bowl/container body -->
+  <path d="M6 17c0 0 1.5 13 2.5 14.5C9.5 33 11 34 13 34h10c2 0 3.5-1 4.5-2.5C28.5 30 30 17 30 17H6Z"/>
+  <!-- Lid rim -->
+  <path d="M4 14.5C4 13.1 5.1 12 6.5 12h23c1.4 0 2.5 1.1 2.5 2.5S30.9 17 29.5 17H6.5C5.1 17 4 15.9 4 14.5Z"/>
+  <!-- Handle/knob on lid -->
+  <rect x="15" y="9" width="6" height="4" rx="2"/>
+  <!-- Leaf -->
+  <path d="M22 4c3.5-1 6.5 0.5 7.5 3.5-1.5 2-4.5 2.5-7 1L22 4Z"/>
+  <!-- Leaf stem -->
+  <path d="M22 4c-1 2-1.5 4-1 6" stroke="#1A3C34" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+</svg>
