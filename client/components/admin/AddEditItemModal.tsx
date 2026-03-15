@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useForm } from "react-hook-form";
 import type { AdminFoodItem } from "@/data/menuItems";
 import { uploadMenuItemImage } from "@/lib/imageUpload";
 import { toast } from "@/lib/toast";
+import {
+  type MenuItemFormValues,
+  menuItemFormSchema,
+} from "@/lib/validation/menuItemForm";
 import ToggleSwitch from "./ToggleSwitch";
 import ImageUpload from "./ImageUpload";
 
@@ -18,19 +24,6 @@ interface AddEditItemModalProps {
   categories: string[];
 }
 
-interface FormValues {
-  name: string;
-  price: string;
-  category: string;
-  description: string;
-}
-
-interface FormErrors {
-  name?: string;
-  price?: string;
-  category?: string;
-}
-
 export default function AddEditItemModal({
   isOpen,
   onClose,
@@ -38,46 +31,45 @@ export default function AddEditItemModal({
   item,
   categories,
 }: AddEditItemModalProps) {
-  const [formValues, setFormValues] = useState<FormValues>({
-    name: "",
-    price: "",
-    category: "",
-    description: "",
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [available, setAvailable] = useState(true);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [fileError, setFileError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const {
+    register,
+    reset,
+    setValue,
+    setError,
+    clearErrors,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<MenuItemFormValues>({
+    resolver: zodResolver(menuItemFormSchema),
+    defaultValues: {
+      name: "",
+      price: "",
+      category: "",
+      description: "",
+      imageFile: undefined,
+    },
+  });
+  const selectedFile = watch("imageFile");
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (isOpen) {
-      if (item) {
-        setFormValues({
-          name: item.name,
-          price: String(item.price),
-          category: item.category,
-          description: item.description,
-        });
-        setAvailable(item.status === "available");
-      } else {
-        setFormValues({
-          name: "",
-          price: "",
-          category: "",
-          description: "",
-        });
-        setAvailable(true);
-      }
-      setSelectedFile(null);
-      setErrors({});
-      setFileError(null);
+      reset({
+        name: item?.name ?? "",
+        price: item ? String(item.price) : "",
+        category: item?.category ?? "",
+        description: item?.description ?? "",
+        imageFile: undefined,
+      });
+      setAvailable(item?.status === "available" || !item);
       setSubmitting(false);
     }
-  }, [isOpen, item]);
+  }, [isOpen, item, reset]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -93,70 +85,36 @@ export default function AddEditItemModal({
     };
   }, [isOpen, onClose]);
 
-  const updateField = (field: keyof FormValues, value: string) => {
-    setFormValues((current) => ({ ...current, [field]: value }));
-    if (field === "name" || field === "price" || field === "category") {
-      setErrors((current) => ({ ...current, [field]: undefined }));
-    }
+  const handleFileSelect = (file: File | null) => {
+    setValue("imageFile", file ?? undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    clearErrors("imageFile");
   };
 
-  const validateForm = () => {
-    const nextErrors: FormErrors = {};
-
-    if (!formValues.name.trim()) {
-      nextErrors.name = "Name is required.";
-    }
-
-    if (!formValues.category.trim()) {
-      nextErrors.category = categories.length
-        ? "Category is required."
-        : "Create a category before saving a menu item.";
-    }
-
-    const normalizedPrice = formValues.price.replace("$", "").trim();
-    if (!normalizedPrice) {
-      nextErrors.price = "Price is required.";
-    } else {
-      const priceValue = Number(normalizedPrice);
-      if (Number.isNaN(priceValue) || priceValue <= 0) {
-        nextErrors.price = "Enter a valid price greater than 0.";
-      }
-    }
-
-    return nextErrors;
+  const handleFileValidationError = (message: string) => {
+    setValue("imageFile", undefined, { shouldDirty: true, shouldValidate: false });
+    setError("imageFile", { type: "manual", message });
+    toast.error(message);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const nextErrors = validateForm();
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
-      toast.error("Please fill in all required fields correctly.");
-      return;
-    }
-
-    if (fileError) {
-      toast.error(fileError);
-      return;
-    }
-
+  const onSubmit = async (values: MenuItemFormValues) => {
     try {
       setSubmitting(true);
 
       let imageUrl = item?.image || "/images/image1.jpeg";
-      if (selectedFile) {
-        imageUrl = await uploadMenuItemImage(selectedFile);
+      if (values.imageFile) {
+        imageUrl = await uploadMenuItemImage(values.imageFile);
       }
 
-      const priceNum = Number(formValues.price.replace("$", "").trim());
+      const priceNum = Number(values.price.replace("$", "").trim());
       await onSave({
         id: item?.id || crypto.randomUUID(),
-        name: formValues.name.trim(),
+        name: values.name.trim(),
         price: priceNum,
-        category: formValues.category,
-        description: formValues.description.trim(),
+        category: values.category,
+        description: values.description.trim(),
         image: imageUrl,
         status: available ? "available" : "unavailable",
       });
@@ -171,15 +129,8 @@ export default function AddEditItemModal({
     }
   };
 
-  const handleFileSelect = (file: File | null) => {
-    setSelectedFile(file);
-    setFileError(null);
-  };
-
-  const handleFileValidationError = (message: string) => {
-    setSelectedFile(null);
-    setFileError(message);
-    toast.error(message);
+  const onError = () => {
+    toast.error("Please fix the validation errors before saving.");
   };
 
   if (!mounted) return null;
@@ -216,7 +167,11 @@ export default function AddEditItemModal({
               </button>
             </div>
 
-            <form noValidate onSubmit={handleSubmit} className="space-y-5">
+            <form
+              noValidate
+              onSubmit={handleSubmit(onSubmit, onError)}
+              className="space-y-5"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-text-dark mb-1.5">
@@ -224,8 +179,7 @@ export default function AddEditItemModal({
                   </label>
                   <input
                     type="text"
-                    value={formValues.name}
-                    onChange={(e) => updateField("name", e.target.value)}
+                    {...register("name")}
                     aria-invalid={Boolean(errors.name)}
                     className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
                       errors.name ? "border-red-300" : "border-gray-200"
@@ -241,8 +195,7 @@ export default function AddEditItemModal({
                   </label>
                   <input
                     type="text"
-                    value={formValues.price}
-                    onChange={(e) => updateField("price", e.target.value)}
+                    {...register("price")}
                     aria-invalid={Boolean(errors.price)}
                     className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
                       errors.price ? "border-red-300" : "border-gray-200"
@@ -259,8 +212,7 @@ export default function AddEditItemModal({
                   Category
                 </label>
                 <select
-                  value={formValues.category}
-                  onChange={(e) => updateField("category", e.target.value)}
+                  {...register("category")}
                   aria-invalid={Boolean(errors.category)}
                   className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none ${
                     errors.category ? "border-red-300" : "border-gray-200"
@@ -283,8 +235,7 @@ export default function AddEditItemModal({
                   Description
                 </label>
                 <textarea
-                  value={formValues.description}
-                  onChange={(e) => updateField("description", e.target.value)}
+                  {...register("description")}
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 />
@@ -296,7 +247,7 @@ export default function AddEditItemModal({
                 </label>
                 <ImageUpload
                   fileName={selectedFile?.name ?? null}
-                  error={fileError ?? undefined}
+                  error={errors.imageFile?.message}
                   onFileSelect={handleFileSelect}
                   onValidationError={handleFileValidationError}
                 />

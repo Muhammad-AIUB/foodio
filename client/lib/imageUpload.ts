@@ -1,25 +1,7 @@
-export const ACCEPTED_IMAGE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-] as const;
-
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
-
-export function validateImageFile(file: File) {
-  if (!ACCEPTED_IMAGE_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
-    return "Unsupported image format. Please use PNG, JPEG, or WEBP.";
-  }
-
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return "Image size must be 2MB or smaller.";
-  }
-
-  return null;
-}
+import { validateMenuItemImageFile } from "@/lib/validation/menuItemForm";
 
 export async function uploadMenuItemImage(file: File) {
-  const validationError = validateImageFile(file);
+  const validationError = validateMenuItemImageFile(file);
   if (validationError) {
     throw new Error(validationError);
   }

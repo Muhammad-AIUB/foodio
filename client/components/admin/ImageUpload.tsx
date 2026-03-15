@@ -2,7 +2,11 @@
 
 import { useRef } from "react";
 import { Upload, X } from "lucide-react";
-import { ACCEPTED_IMAGE_TYPES, validateImageFile } from "@/lib/imageUpload";
+import {
+  MENU_ITEM_IMAGE_HELPER_TEXT,
+  MENU_ITEM_IMAGE_MIME_TYPES,
+  validateMenuItemImageFile,
+} from "@/lib/validation/menuItemForm";
 
 interface ImageUploadProps {
   fileName: string | null;
@@ -25,7 +29,7 @@ export default function ImageUpload({
       return;
     }
 
-    const validationError = validateImageFile(file);
+    const validationError = validateMenuItemImageFile(file);
     if (validationError) {
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -62,13 +66,11 @@ export default function ImageUpload({
         <p className="text-sm text-text-dark">
           Drag or click <span className="font-bold">here</span> to upload
         </p>
-        <p className="text-xs text-text-muted mt-1">
-          Size must be maximum 2MB. Supported formats: PNG, JPEG, and WEBP
-        </p>
+        <p className="text-xs text-text-muted mt-1">{MENU_ITEM_IMAGE_HELPER_TEXT}</p>
         <input
           ref={inputRef}
           type="file"
-          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+          accept={MENU_ITEM_IMAGE_MIME_TYPES.join(",")}
           onChange={handleChange}
           className="hidden"
         />
