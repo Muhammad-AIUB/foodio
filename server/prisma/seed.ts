@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import * as bcrypt from 'bcrypt';
+import { hashPassword } from '../src/auth/utils/password.util';
 
 const ADMIN_EMAIL = 'admin@foodio.com';
 const ADMIN_PASSWORD = 'admin123';
@@ -31,7 +31,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, SALT_ROUNDS);
+    const hashedPassword = await hashPassword(ADMIN_PASSWORD, SALT_ROUNDS);
 
     await prisma.user.create({
       data: {
