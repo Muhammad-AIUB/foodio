@@ -11,7 +11,7 @@ import {
 interface ImageUploadProps {
   fileName: string | null;
   error?: string;
-  onFileSelect: (file: File | null) => void;
+  onFileSelect: (file: File | null) => void | Promise<void>;
   onValidationError?: (message: string) => void;
 }
 

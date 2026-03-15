@@ -7,7 +7,6 @@ import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import type { AdminFoodItem } from "@/data/menuItems";
-import { uploadMenuItemImage } from "@/lib/imageUpload";
 import { toast } from "@/lib/toast";
 import {
   type MenuItemFormValues,
@@ -32,6 +31,8 @@ export default function AddEditItemModal({
   categories,
 }: AddEditItemModalProps) {
   const [available, setAvailable] = useState(true);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [convertingImage, setConvertingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const {
@@ -50,10 +51,10 @@ export default function AddEditItemModal({
       price: "",
       category: "",
       description: "",
-      imageFile: undefined,
+      imageUrl: undefined,
     },
   });
-  const selectedFile = watch("imageFile");
+  const imageUrl = watch("imageUrl");
 
   useEffect(() => setMounted(true), []);
 
@@ -64,12 +65,15 @@ export default function AddEditItemModal({
         price: item ? String(item.price) : "",
         category: item?.category ?? "",
         description: item?.description ?? "",
-        imageFile: undefined,
+        imageUrl: item?.image ?? undefined,
       });
       setAvailable(item?.status === "available" || !item);
+      setFileName(null);
+      clearErrors("imageUrl");
+      setConvertingImage(false);
       setSubmitting(false);
     }
-  }, [isOpen, item, reset]);
+  }, [isOpen, item, reset, clearErrors]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -85,29 +89,72 @@ export default function AddEditItemModal({
     };
   }, [isOpen, onClose]);
 
-  const handleFileSelect = (file: File | null) => {
-    setValue("imageFile", file ?? undefined, {
-      shouldDirty: true,
-      shouldValidate: true,
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+          return;
+        }
+
+        reject(new Error("Failed to convert image to Base64."));
+      };
+
+      reader.onerror = () => reject(new Error("Failed to convert image to Base64."));
+      reader.readAsDataURL(file);
     });
-    clearErrors("imageFile");
+
+  const handleFileSelect = async (file: File | null) => {
+    if (!file) {
+      setFileName(null);
+      setValue("imageUrl", item?.image ?? undefined, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      clearErrors("imageUrl");
+      return;
+    }
+
+    try {
+      setConvertingImage(true);
+      const base64Image = await readFileAsDataUrl(file);
+      setFileName(file.name);
+      setValue("imageUrl", base64Image, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      clearErrors("imageUrl");
+    } catch (error) {
+      setFileName(null);
+      setValue("imageUrl", undefined, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+      setError("imageUrl", {
+        type: "manual",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to convert image to Base64.",
+      });
+      toast.error("Failed to convert image to Base64.");
+    } finally {
+      setConvertingImage(false);
+    }
   };
 
   const handleFileValidationError = (message: string) => {
-    setValue("imageFile", undefined, { shouldDirty: true, shouldValidate: false });
-    setError("imageFile", { type: "manual", message });
+    setFileName(null);
+    setValue("imageUrl", undefined, { shouldDirty: true, shouldValidate: false });
+    setError("imageUrl", { type: "manual", message });
     toast.error(message);
   };
 
   const onSubmit = async (values: MenuItemFormValues) => {
     try {
       setSubmitting(true);
-
-      let imageUrl = item?.image || "/images/image1.jpeg";
-      if (values.imageFile) {
-        imageUrl = await uploadMenuItemImage(values.imageFile);
-      }
-
       const priceNum = Number(values.price.replace("$", "").trim());
       await onSave({
         id: item?.id || crypto.randomUUID(),
@@ -115,7 +162,7 @@ export default function AddEditItemModal({
         price: priceNum,
         category: values.category,
         description: values.description.trim(),
-        image: imageUrl,
+        image: values.imageUrl || item?.image || "/images/image1.jpeg",
         status: available ? "available" : "unavailable",
       });
 
@@ -246,14 +293,19 @@ export default function AddEditItemModal({
                   Image
                 </label>
                 <ImageUpload
-                  fileName={selectedFile?.name ?? null}
-                  error={errors.imageFile?.message}
+                  fileName={fileName}
+                  error={errors.imageUrl?.message}
                   onFileSelect={handleFileSelect}
                   onValidationError={handleFileValidationError}
                 />
-                {item?.image && !selectedFile && (
+                {item?.image && !fileName && !imageUrl?.startsWith("data:image") && (
                   <p className="mt-1.5 text-xs text-text-muted">
                     Leave this empty to keep the current image.
+                  </p>
+                )}
+                {convertingImage && (
+                  <p className="mt-1.5 text-xs text-text-muted">
+                    Converting image to Base64...
                   </p>
                 )}
               </div>
@@ -267,7 +319,7 @@ export default function AddEditItemModal({
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || convertingImage}
                   className="bg-primary text-white px-8 py-3 rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
                   {submitting ? "Saving..." : "Save Changes"}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MENU_ITEM_IMAGE_MAX_FILE_SIZE = 20 * 1024 * 1024;
+export const MENU_ITEM_IMAGE_MAX_FILE_SIZE = 5 * 1024 * 1024;
 export const MENU_ITEM_IMAGE_MIME_TYPES = [
   "image/png",
   "image/jpeg",
@@ -8,13 +8,13 @@ export const MENU_ITEM_IMAGE_MIME_TYPES = [
   "image/webp",
 ] as const;
 export const MENU_ITEM_IMAGE_HELPER_TEXT =
-  "Size must be maximum 20MB. Supported formats: PNG, JPEG, WEBP";
+  "Size must be maximum 5MB. Supported formats: PNG, JPEG, WEBP";
 
 function isBrowserFile(value: unknown): value is File {
   return typeof File !== "undefined" && value instanceof File;
 }
 
-export const menuItemImageSchema = z
+export const menuItemImageFileSchema = z
   .custom<File | undefined>(
     (value) => value == null || isBrowserFile(value),
     "Please select a valid image file."
@@ -29,7 +29,7 @@ export const menuItemImageSchema = z
   )
   .refine(
     (file) => !file || file.size <= MENU_ITEM_IMAGE_MAX_FILE_SIZE,
-    "Image size must be 20MB or smaller."
+    "Image size must be 5MB or smaller."
   );
 
 export const menuItemFormSchema = z.object({
@@ -50,13 +50,13 @@ export const menuItemFormSchema = z.object({
   description: z
     .string()
     .max(1000, "Description must be 1000 characters or fewer."),
-  imageFile: menuItemImageSchema.optional(),
+  imageUrl: z.string().trim().optional(),
 });
 
 export type MenuItemFormValues = z.infer<typeof menuItemFormSchema>;
 
 export function validateMenuItemImageFile(file: File) {
-  const result = menuItemImageSchema.safeParse(file);
+  const result = menuItemImageFileSchema.safeParse(file);
   if (result.success) {
     return null;
   }
