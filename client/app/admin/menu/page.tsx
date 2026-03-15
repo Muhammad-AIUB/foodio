@@ -80,9 +80,12 @@ export default function AdminMenuPage() {
 
   const handleSaveItem = async (item: AdminFoodItem) => {
     try {
+      setError(null);
       const cat = categories.find((c) => c.name === item.category || c.id === item.categoryId);
-      const categoryId = cat?.id ?? categories[0]?.id;
-      if (!categoryId) return;
+      const categoryId = cat?.id;
+      if (!categoryId) {
+        throw new Error("Please select a valid category.");
+      }
       if (editingItem) {
         await api.patch(`/menu-items/${item.id}`, {
           name: item.name,
@@ -102,11 +105,12 @@ export default function AdminMenuPage() {
           categoryId,
         });
       }
-      fetchData();
+      await fetchData();
       setIsItemModalOpen(false);
       setEditingItem(null);
-    } catch {
+    } catch (error) {
       setError("Failed to save item");
+      throw error instanceof Error ? error : new Error("Failed to save item");
     }
   };
 

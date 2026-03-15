@@ -5,15 +5,30 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AdminFoodItem } from "@/data/menuItems";
+import { uploadMenuItemImage } from "@/lib/imageUpload";
+import { toast } from "@/lib/toast";
 import ToggleSwitch from "./ToggleSwitch";
 import ImageUpload from "./ImageUpload";
 
 interface AddEditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (item: AdminFoodItem) => void;
+  onSave: (item: AdminFoodItem) => Promise<void> | void;
   item: AdminFoodItem | null;
   categories: string[];
+}
+
+interface FormValues {
+  name: string;
+  price: string;
+  category: string;
+  description: string;
+}
+
+interface FormErrors {
+  name?: string;
+  price?: string;
+  category?: string;
 }
 
 export default function AddEditItemModal({
@@ -23,12 +38,17 @@ export default function AddEditItemModal({
   item,
   categories,
 }: AddEditItemModalProps) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState<FormValues>({
+    name: "",
+    price: "",
+    category: "",
+    description: "",
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [available, setAvailable] = useState(true);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -36,22 +56,28 @@ export default function AddEditItemModal({
   useEffect(() => {
     if (isOpen) {
       if (item) {
-        setName(item.name);
-        setPrice(`$${item.price}`);
-        setCategory(item.category);
-        setDescription(item.description);
-        setFileName("Dish_image.png");
+        setFormValues({
+          name: item.name,
+          price: String(item.price),
+          category: item.category,
+          description: item.description,
+        });
         setAvailable(item.status === "available");
       } else {
-        setName("");
-        setPrice("");
-        setCategory(categories[0] || "");
-        setDescription("");
-        setFileName(null);
+        setFormValues({
+          name: "",
+          price: "",
+          category: "",
+          description: "",
+        });
         setAvailable(true);
       }
+      setSelectedFile(null);
+      setErrors({});
+      setFileError(null);
+      setSubmitting(false);
     }
-  }, [isOpen, item, categories]);
+  }, [isOpen, item]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -67,18 +93,93 @@ export default function AddEditItemModal({
     };
   }, [isOpen, onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const updateField = (field: keyof FormValues, value: string) => {
+    setFormValues((current) => ({ ...current, [field]: value }));
+    if (field === "name" || field === "price" || field === "category") {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
+  };
+
+  const validateForm = () => {
+    const nextErrors: FormErrors = {};
+
+    if (!formValues.name.trim()) {
+      nextErrors.name = "Name is required.";
+    }
+
+    if (!formValues.category.trim()) {
+      nextErrors.category = categories.length
+        ? "Category is required."
+        : "Create a category before saving a menu item.";
+    }
+
+    const normalizedPrice = formValues.price.replace("$", "").trim();
+    if (!normalizedPrice) {
+      nextErrors.price = "Price is required.";
+    } else {
+      const priceValue = Number(normalizedPrice);
+      if (Number.isNaN(priceValue) || priceValue <= 0) {
+        nextErrors.price = "Enter a valid price greater than 0.";
+      }
+    }
+
+    return nextErrors;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const priceNum = parseFloat(price.replace("$", "")) || 0;
-    onSave({
-      id: item?.id || crypto.randomUUID(),
-      name,
-      price: priceNum,
-      category,
-      description,
-      image: item?.image || "/images/image1.jpeg",
-      status: available ? "available" : "unavailable",
-    });
+
+    const nextErrors = validateForm();
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("Please fill in all required fields correctly.");
+      return;
+    }
+
+    if (fileError) {
+      toast.error(fileError);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      let imageUrl = item?.image || "/images/image1.jpeg";
+      if (selectedFile) {
+        imageUrl = await uploadMenuItemImage(selectedFile);
+      }
+
+      const priceNum = Number(formValues.price.replace("$", "").trim());
+      await onSave({
+        id: item?.id || crypto.randomUUID(),
+        name: formValues.name.trim(),
+        price: priceNum,
+        category: formValues.category,
+        description: formValues.description.trim(),
+        image: imageUrl,
+        status: available ? "available" : "unavailable",
+      });
+
+      toast.success(item ? "Menu item updated." : "Menu item created.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save the menu item."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    setFileError(null);
+  };
+
+  const handleFileValidationError = (message: string) => {
+    setSelectedFile(null);
+    setFileError(message);
+    toast.error(message);
   };
 
   if (!mounted) return null;
@@ -107,6 +208,7 @@ export default function AddEditItemModal({
                 {item ? "Edit Item" : "Add New Item"}
               </h2>
               <button
+                type="button"
                 onClick={onClose}
                 className="text-text-muted hover:text-text-dark transition-colors"
               >
@@ -114,7 +216,7 @@ export default function AddEditItemModal({
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form noValidate onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-text-dark mb-1.5">
@@ -122,11 +224,16 @@ export default function AddEditItemModal({
                   </label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    required
+                    value={formValues.name}
+                    onChange={(e) => updateField("name", e.target.value)}
+                    aria-invalid={Boolean(errors.name)}
+                    className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                      errors.name ? "border-red-300" : "border-gray-200"
+                    }`}
                   />
+                  {errors.name && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-text-dark mb-1.5">
@@ -134,11 +241,16 @@ export default function AddEditItemModal({
                   </label>
                   <input
                     type="text"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    required
+                    value={formValues.price}
+                    onChange={(e) => updateField("price", e.target.value)}
+                    aria-invalid={Boolean(errors.price)}
+                    className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                      errors.price ? "border-red-300" : "border-gray-200"
+                    }`}
                   />
+                  {errors.price && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.price}</p>
+                  )}
                 </div>
               </div>
 
@@ -147,16 +259,23 @@ export default function AddEditItemModal({
                   Category
                 </label>
                 <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none"
+                  value={formValues.category}
+                  onChange={(e) => updateField("category", e.target.value)}
+                  aria-invalid={Boolean(errors.category)}
+                  className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none ${
+                    errors.category ? "border-red-300" : "border-gray-200"
+                  }`}
                 >
+                  <option value="">Select a category</option>
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
                   ))}
                 </select>
+                {errors.category && (
+                  <p className="mt-1.5 text-sm text-red-600">{errors.category}</p>
+                )}
               </div>
 
               <div>
@@ -164,8 +283,8 @@ export default function AddEditItemModal({
                   Description
                 </label>
                 <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formValues.description}
+                  onChange={(e) => updateField("description", e.target.value)}
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 />
@@ -176,11 +295,16 @@ export default function AddEditItemModal({
                   Image
                 </label>
                 <ImageUpload
-                  fileName={fileName}
-                  onFileSelect={(file) =>
-                    setFileName(file ? file.name : null)
-                  }
+                  fileName={selectedFile?.name ?? null}
+                  error={fileError ?? undefined}
+                  onFileSelect={handleFileSelect}
+                  onValidationError={handleFileValidationError}
                 />
+                {item?.image && !selectedFile && (
+                  <p className="mt-1.5 text-xs text-text-muted">
+                    Leave this empty to keep the current image.
+                  </p>
+                )}
               </div>
 
               <ToggleSwitch
@@ -192,9 +316,10 @@ export default function AddEditItemModal({
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="bg-primary text-white px-8 py-3 rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Save Changes
+                  {submitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

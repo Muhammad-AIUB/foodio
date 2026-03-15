@@ -1,8 +1,3 @@
-// =========================
-// FOODIO - Prisma Schema
-// Matches the PostgreSQL schema (see schema.sql)
-// =========================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,26 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
-// =========================
-// ENUMS
-// =========================
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum OrderStatus {
-  Pending
-  Preparing
-  Ready
-  Completed
-}
-
-// =========================
-// MODELS
-// =========================
 
 model User {
   id        String   @id @default(uuid()) @db.Uuid
@@ -39,37 +14,35 @@ model User {
   role      UserRole @default(USER)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-
-  orders Order[]
+  orders    Order[]
 
   @@map("users")
 }
 
 model Category {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique @db.VarChar(120)
-  description String? @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
-
-  menuItems MenuItem[]
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String     @db.VarChar(120)
+  description String?
+  imageUrl    String?    @map("image_url") @db.Text
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at")
+  menuItems   MenuItem[]
 
   @@map("categories")
 }
 
 model MenuItem {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String   @db.VarChar(150)
-  description  String? @db.Text
-  price        Decimal  @db.Decimal(10, 2)
-  imageUrl     String?  @map("image_url") @db.Text
-  availability Boolean  @default(true)
-  categoryId   String   @map("category_id") @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-
-  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
+  id           String      @id @default(uuid()) @db.Uuid
+  name         String      @db.VarChar(150)
+  description  String?
+  price        Decimal     @db.Decimal(10, 2)
+  imageUrl     String?     @map("image_url")
+  availability Boolean     @default(true)
+  categoryId   String      @map("category_id") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at")
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
 
   @@index([categoryId])
   @@map("menu_items")
@@ -82,24 +55,34 @@ model Order {
   status     OrderStatus @default(Pending)
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at")
-
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("orders")
 }
 
 model OrderItem {
-  id          String   @id @default(uuid()) @db.Uuid
-  orderId     String   @map("order_id") @db.Uuid
-  menuItemId  String   @map("menu_item_id") @db.Uuid
-  quantity    Int
-  priceSnapshot Decimal @map("price_snapshot") @db.Decimal(10, 2)
-
-  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid()) @db.Uuid
+  orderId       String   @map("order_id") @db.Uuid
+  menuItemId    String   @map("menu_item_id") @db.Uuid
+  quantity      Int
+  priceSnapshot Decimal  @map("price_snapshot") @db.Decimal(10, 2)
+  menuItem      MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("order_items")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  Pending
+  Preparing
+  Ready
+  Completed
 }
