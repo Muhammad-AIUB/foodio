@@ -4,11 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, ArrowRight, Menu, X, LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
+import { ShoppingCart, ArrowRight, Menu, X, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartContext";
 import { useAuthStore } from "@/store/useAuthStore";
 import CartModal from "./CartModal";
+import UserMenu from "./UserMenu";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -23,13 +24,7 @@ export default function Navbar() {
   const { totalItems } = useCart();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-
-  const handleLogout = async () => {
-    await logout();
-    setMobileOpen(false);
-    window.location.href = "/sign-in";
-  };
+  const closeMobile = () => setMobileOpen(false);
 
   return (
     <nav className="sticky top-0 z-50 bg-white/40 backdrop-blur-sm border-b border-gray-100/50">
@@ -90,22 +85,7 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                 )}
-                {user?.role === "USER" && (
-                  <Link
-                    href="/my-orders"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-primary border border-primary hover:bg-accent transition-colors"
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                    My Orders
-                  </Link>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
+                <UserMenu />
               </>
             ) : (
               <Link
@@ -175,30 +155,14 @@ export default function Navbar() {
                     {user?.role === "ADMIN" && (
                       <Link
                         href="/admin"
-                        onClick={() => setMobileOpen(false)}
+                        onClick={closeMobile}
                         className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-primary bg-accent w-full"
                       >
                         <LayoutDashboard className="w-4 h-4" />
                         Dashboard
                       </Link>
                     )}
-                    {user?.role === "USER" && (
-                      <Link
-                        href="/my-orders"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-primary bg-accent"
-                      >
-                        <ClipboardList className="w-4 h-4" />
-                        My Orders
-                      </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
+                    <UserMenu onAction={closeMobile} />
                   </>
                 ) : (
                   <Link
