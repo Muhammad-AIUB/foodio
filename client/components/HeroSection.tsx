@@ -15,7 +15,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="py-12 lg:py-0 lg:pr-12"
+            className="py-12 lg:py-0 lg:pr-12 lg:-mt-40"
           >
             <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-8">
               <Image src="/images/Icon_Book.jpeg" alt="Menu icon" width={18} height={18} />
@@ -24,7 +24,7 @@ export default function HeroSection() {
               </span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-[64px] xl:text-[72px] leading-[1.08] font-serif font-bold text-primary mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] xl:text-[60px] leading-[1.12] font-serif font-bold text-primary mb-8">
               Where Great Food
               <br className="hidden lg:block" />
               {" "}Meets{" "}
