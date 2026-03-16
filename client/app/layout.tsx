@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "Foodio - Premium Food Ordering",
   description:
     "Experience a symphony of flavors crafted with passion. Premium ingredients, exquisite recipes, delivered to your door.",
+  icons: {
+    icon: "/images/logo.svg",
+    shortcut: "/images/logo.svg",
+  },
 };
 
 export default function RootLayout({
