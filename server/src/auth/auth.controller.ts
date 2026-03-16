@@ -8,7 +8,7 @@ import {
   Get,
   Res,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { AuthService } from './auth.service';
@@ -49,12 +49,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signout')
   signOut(@Res({ passthrough: true }) res: Response): { message: string } {
-    res.clearCookie(COOKIE_NAME, {
-      path: '/',
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-    });
+    res.clearCookie(COOKIE_NAME, this.getCookieOptions());
     return { message: 'Signed out' };
   }
 
@@ -65,13 +60,20 @@ export class AuthController {
   }
 
   private setTokenCookie(res: Response, token: string): void {
-    const isProd = this.config.get('NODE_ENV') === 'production';
     res.cookie(COOKIE_NAME, token, {
+      ...this.getCookieOptions(),
+      maxAge: MAX_AGE_MS,
+    });
+  }
+
+  private getCookieOptions(): CookieOptions {
+    const isProd = this.config.get('NODE_ENV') === 'production';
+
+    return {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
-      maxAge: MAX_AGE_MS,
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
-    });
+    };
   }
 }

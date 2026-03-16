@@ -12,6 +12,15 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+  const allowedOrigins = Array.from(
+    new Set(
+      [
+        'https://foodio-one-ochre.vercel.app',
+        config.get<string>('FRONTEND_URL'),
+        'http://localhost:3000',
+      ].filter((origin): origin is string => Boolean(origin)),
+    ),
+  );
 
   // Body parser limits
   app.use(express.json({ limit: '50mb' }));
@@ -25,17 +34,11 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // THE FIX: Explicitly allow Vercel
   app.enableCors({
-    origin: true, // Allow all origins to talk to the server
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   app.setGlobalPrefix('api/v1');
