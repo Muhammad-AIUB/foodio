@@ -85,7 +85,7 @@ export default function FoodMenuSection() {
 
   if (loading) {
     return (
-      <section className="py-16 sm:py-20 bg-white">
+      <section className="py-16 sm:py-20 mb-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 flex justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
@@ -94,7 +94,7 @@ export default function FoodMenuSection() {
   }
 
   return (
-    <section className="py-16 sm:py-20 bg-white">
+    <section className="py-16 sm:py-20 mb-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -227,7 +227,7 @@ export default function FoodMenuSection() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6 pb-24">
           {filteredItems.map((item, index) => (
             <FoodCard key={`${item.name}-${index}`} {...item} index={index % 4} animateOnLoad />
           ))}

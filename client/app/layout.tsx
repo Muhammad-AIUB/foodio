@@ -30,11 +30,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
+      <body suppressHydrationWarning className={`${playfair.variable} ${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <CartProvider>
-          <AuthInit />
-          <Toaster />
-          {children}
+          <div className="flex flex-col flex-1 min-h-screen">
+            <AuthInit />
+            <Toaster />
+            {children}
+          </div>
         </CartProvider>
       </body>
     </html>

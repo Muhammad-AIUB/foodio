@@ -4,9 +4,11 @@ import Footer from "@/components/Footer";
 
 export default function FoodMenuPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen flex flex-col flex-1 bg-white">
       <Navbar />
-      <FoodMenuSection />
+      <div className="flex-1">
+        <FoodMenuSection />
+      </div>
       <Footer />
     </main>
   );

@@ -41,7 +41,7 @@ export default function FoodCard({
       {...animationProps}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       whileHover={{ scale: 1.03 }}
-      className="relative bg-cream rounded-3xl pt-24 pb-5 pl-5 pr-5 flex flex-col min-h-[320px] transition-shadow duration-300 hover:shadow-md mt-16"
+      className="relative bg-cream rounded-3xl pt-24 pb-5 pl-5 pr-5 flex flex-col min-h-[320px] transition-shadow duration-300 hover:shadow-md mt-16 mb-6"
     >
       <div className="absolute -top-14 -left-6 w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] rounded-full overflow-hidden shadow-lg">
         <Image
