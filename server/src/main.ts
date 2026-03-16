@@ -16,7 +16,7 @@ async function bootstrap(): Promise<void> {
     new Set(
       [
         'https://foodio-one-ochre.vercel.app',
-        config.get<string>('FRONTEND_URL'),
+        config.get<string>('FRONTEND_URL')?.replace(/\/+$/, ''),
         'http://localhost:3000',
       ].filter((origin): origin is string => Boolean(origin)),
     ),

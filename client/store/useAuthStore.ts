@@ -9,6 +9,18 @@ export interface AuthUser {
 }
 
 const AUTH_STORAGE_KEY = 'auth-storage';
+const COOKIE_NAME = 'access_token';
+const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
+
+function setFrontendCookie(token: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax; Secure`;
+}
+
+function clearFrontendCookie(): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax; Secure`;
+}
 
 interface LogoutOptions {
   skipRequest?: boolean;
@@ -66,9 +78,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: raw.name,
         role: raw.role as 'USER' | 'ADMIN',
       };
+      const accessToken = payload?.accessToken ?? null;
+      if (accessToken) setFrontendCookie(accessToken);
       set({
         user,
-        token: payload?.accessToken ?? null,
+        token: accessToken,
         isAuthenticated: true,
         isLoading: false,
       });
@@ -96,6 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(AUTH_STORAGE_KEY);
         window.localStorage.removeItem('isAuthenticated');
+        clearFrontendCookie();
       }
 
       return { user: null, token: null, isAuthenticated: false, isLoading: false };
