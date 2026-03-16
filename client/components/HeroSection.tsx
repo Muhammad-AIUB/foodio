@@ -15,7 +15,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="py-12 lg:py-0 lg:pr-12 lg:-mt-40"
+            className="py-12 lg:py-0 lg:pr-12 lg:-mt-25"
           >
             <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-8">
               <Image src="/images/Icon_Book.jpeg" alt="Menu icon" width={18} height={18} />

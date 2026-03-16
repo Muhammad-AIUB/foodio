@@ -52,7 +52,7 @@ export default function CategoriesSection() {
 
   if (loading) {
     return (
-      <section className="py-12 sm:py-16 bg-white">
+      <section className="py-8 sm:py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 flex justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
@@ -61,7 +61,7 @@ export default function CategoriesSection() {
   }
 
   return (
-    <section className="py-12 sm:py-16 bg-white">
+    <section className="  bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
