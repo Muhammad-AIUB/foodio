@@ -23,14 +23,20 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
   const [placing, setPlacing] = useState(false);
 
   const handleCheckout = async () => {
+    console.log(">>> handleCheckout FIRED", { user, itemCount: items.length });
+
     if (!user) {
+      console.log(">>> No user – redirecting to sign-in");
       toast.error("Please sign in to place an order.");
       onClose();
       router.push("/sign-in");
       return;
     }
 
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      console.log(">>> Cart is empty – aborting");
+      return;
+    }
 
     setPlacing(true);
     try {
@@ -41,13 +47,17 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
         })),
       };
 
-      await api.post("/orders", payload);
+      console.log(">>> Sending order payload:", JSON.stringify(payload));
 
+      const res = await api.post("/orders", payload);
+      console.log(">>> Order response:", res.status, res.data);
+
+      toast.success("Order confirmed!");
       clearCart();
       onClose();
-      toast.success("Order placed successfully!");
       router.push("/my-orders");
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(">>> Order failed:", err);
       const axiosErr = err as import("axios").AxiosError<{ message?: string | string[] }>;
       const msg = axiosErr.response?.data?.message;
       const errorText = Array.isArray(msg) ? msg[0] : msg;
@@ -93,7 +103,8 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative z-10 w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-serif text-2xl font-bold text-primary italic">
@@ -194,13 +205,18 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
 
                 <div className="flex gap-4 mt-8">
                   <button
+                    type="button"
                     onClick={onClose}
                     className="flex-1 py-3.5 rounded-full border border-gray-300 text-text-dark text-sm font-semibold hover:bg-white transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleCheckout}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCheckout();
+                    }}
                     disabled={placing}
                     className="flex-1 py-3.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
