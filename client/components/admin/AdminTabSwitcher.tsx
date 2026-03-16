@@ -17,7 +17,7 @@ export default function AdminTabSwitcher({
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-colors ${
             activeTab === tab.key
               ? "bg-white text-text-dark shadow-sm"
               : "text-text-muted hover:text-text-dark"

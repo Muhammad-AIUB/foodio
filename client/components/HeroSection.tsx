@@ -10,7 +10,7 @@ export default function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-0 items-center min-h-[calc(80vh-80px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-0 items-center min-h-[calc(100svh-100px)] sm:min-h-[calc(85vh-80px)] lg:min-h-[calc(80vh-80px)]">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -48,7 +48,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="lg:absolute lg:top-[7%] lg:right-[-1%] lg:left-165 relative flex items-center justify-center"
           >
-            <div className="relative z-10">
+            <div className="relative z-10 w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px] lg:max-w-[420px] mx-auto">
               <CircularImage
                 src={[
                   "/images/image1.jpeg",
@@ -68,7 +68,7 @@ export default function HeroSection() {
                   opacity: { duration: 0.5, delay: 0.6 },
                   y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
                 }}
-                className="absolute -top-2 right-0 sm:top-2 sm:-right-4 bg-white rounded-2xl shadow-lg px-5 py-3 flex items-center gap-3"
+                className="absolute -top-2 right-0 sm:top-2 sm:-right-4 bg-white rounded-2xl shadow-lg px-3 py-2 sm:px-5 sm:py-3 flex items-center gap-2 sm:gap-3"
               >
                 <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
                   <Flame className="w-5 h-5 text-orange-500" />
@@ -88,7 +88,7 @@ export default function HeroSection() {
                   opacity: { duration: 0.5, delay: 0.8 },
                   y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
                 }}
-                className="absolute bottom-8 -left-4 sm:bottom-12 sm:left-0 bg-white rounded-2xl shadow-lg px-5 py-3 flex items-center gap-3"
+                className="absolute bottom-4 -left-2 sm:bottom-12 sm:left-0 bg-white rounded-2xl shadow-lg px-3 py-2 sm:px-5 sm:py-3 flex items-center gap-2 sm:gap-3"
               >
                 <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center">
                   <Clock className="w-5 h-5 text-amber-600" />

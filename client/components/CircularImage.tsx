@@ -37,8 +37,8 @@ export default function CircularImage({
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, delay }}
-      className="relative rounded-full overflow-hidden shadow-xl hover:scale-105 transition-transform duration-300"
-      style={{ width: size, height: size }}
+      className="relative rounded-full overflow-hidden shadow-xl hover:scale-105 transition-transform duration-300 w-full aspect-square"
+      style={{ maxWidth: size, maxHeight: size }}
     >
       <AnimatePresence mode="wait">
         <motion.div

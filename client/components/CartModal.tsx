@@ -103,7 +103,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative z-10 w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative z-10 w-full max-w-lg bg-cream rounded-3xl p-4 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -154,7 +154,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pl-[76px]">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pl-0 sm:pl-[76px]">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
@@ -203,7 +203,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                   </div>
                 </div>
 
-                <div className="flex gap-4 mt-8">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8">
                   <button
                     type="button"
                     onClick={onClose}

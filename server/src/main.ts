@@ -22,7 +22,9 @@ async function bootstrap(): Promise<void> {
     ),
   );
 
-  logger.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+  logger.log(
+    `CORS allowed origins: ${allowedOrigins.join(', ')} + *.vercel.app previews`,
+  );
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -35,7 +37,20 @@ async function bootstrap(): Promise<void> {
   );
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean | string) => void,
+    ) => {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app')
+      ) {
+        callback(null, origin || '*');
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

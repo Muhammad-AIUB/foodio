@@ -191,7 +191,7 @@ export default function AddEditItemModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-lg bg-cream rounded-3xl p-8 shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-lg bg-cream rounded-3xl p-4 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-serif text-2xl font-bold text-primary italic">
@@ -211,7 +211,7 @@ export default function AddEditItemModal({
               onSubmit={handleSubmit(onSubmit, onError)}
               className="space-y-5"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-text-dark mb-1.5">
                     Name

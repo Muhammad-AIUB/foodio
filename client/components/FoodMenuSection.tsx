@@ -116,7 +116,7 @@ export default function FoodMenuSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-12"
         >
           <div className="flex flex-wrap gap-2">
             {categoryNames.map((cat) => {
@@ -137,7 +137,7 @@ export default function FoodMenuSection() {
             })}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -145,7 +145,7 @@ export default function FoodMenuSection() {
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-48 sm:w-56 border border-gray-200 rounded-full text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+                className="pl-10 pr-4 py-2 w-full min-w-0 sm:w-48 sm:max-w-56 border border-gray-200 rounded-full text-sm text-text-dark placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
               />
             </div>
             <div className="relative" ref={sortRef}>
@@ -229,7 +229,7 @@ export default function FoodMenuSection() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6 pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pt-6 pb-24">
           {filteredItems.map((item, index) => (
             <FoodCard key={item.id} {...item} index={index % 4} animateOnLoad />
           ))}

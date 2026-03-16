@@ -266,8 +266,8 @@ export default function SignInPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 mt-6 text-text-muted text-sm">
-          <Info className="w-4 h-4" />
+        <div className="flex items-center justify-center gap-2 mt-6 text-text-muted text-sm text-center px-4">
+          <Info className="w-4 h-4 shrink-0" />
           <span>For accessing Admin Panel press A from your keyboard.</span>
         </div>
       </main>

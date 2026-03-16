@@ -10,3 +10,11 @@
   --font-serif: "Playfair Display", serif;
   --font-sans: "Inter", sans-serif;
 }
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}

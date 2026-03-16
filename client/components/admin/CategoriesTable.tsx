@@ -15,8 +15,8 @@ export default function CategoriesTable({
   onDelete,
 }: CategoriesTableProps) {
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden">
-      <table className="w-full">
+    <div className="rounded-xl border border-gray-200 overflow-x-auto">
+      <table className="w-full min-w-[280px]">
         <thead>
           <tr className="border-b border-gray-200">
             <th className="text-left px-6 py-4 text-sm font-medium text-text-muted">

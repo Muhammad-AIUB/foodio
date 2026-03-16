@@ -66,7 +66,7 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <h1 className="font-serif text-3xl font-bold text-primary italic mb-8">
+      <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary italic mb-6 sm:mb-8">
         Order Management
       </h1>
 

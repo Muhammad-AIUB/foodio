@@ -54,7 +54,7 @@ export default function OrderDetailsModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md bg-cream rounded-3xl p-8 shadow-xl"
+            className="relative w-full max-w-md bg-cream rounded-3xl p-4 sm:p-8 shadow-xl"
           >
             <div className="flex items-start justify-between mb-6">
               <div>

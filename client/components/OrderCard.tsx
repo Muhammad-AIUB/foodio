@@ -55,7 +55,7 @@ function OrderStepper({ status }: { status: OrderStatus }) {
               </div>
               {!isLast && (
                 <div
-                  className={`mx-1 mb-5 h-0.5 w-16 sm:w-24 md:w-28 ${
+                  className={`mx-0.5 sm:mx-1 mb-5 h-0.5 w-8 sm:w-16 md:w-24 lg:w-28 ${
                     index < currentIndex ? "bg-primary" : "bg-gray-300"
                   }`}
                 />
@@ -73,7 +73,7 @@ export default function OrderCard({ order }: { order: OrderApi }) {
   const placedAt = order.createdAt;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-bold text-text-dark">Order #{order.id.slice(0, 8)}</h3>
