@@ -14,7 +14,7 @@ export const api = axios.create({
   },
 });
 
-const UNAUTHORIZED_EXCLUDED_PATHS = ['/auth/signin', '/auth/register', '/auth/signout'];
+const UNAUTHORIZED_EXCLUDED_PATHS = ['/auth/me', '/auth/signin', '/auth/register', '/auth/signout'];
 
 let isRedirectingAfterUnauthorized = false;
 
@@ -55,7 +55,9 @@ api.interceptors.response.use(
     const requestUrl = error.config?.url ?? '';
     const isExcludedPath = UNAUTHORIZED_EXCLUDED_PATHS.some((path) => requestUrl.includes(path));
 
-    if (status === 401 && !isExcludedPath && !isRedirectingAfterUnauthorized) {
+    const hadToken = !!getStoredToken();
+
+    if (status === 401 && !isExcludedPath && !isRedirectingAfterUnauthorized && hadToken) {
       isRedirectingAfterUnauthorized = true;
       await useAuthStore.getState().logout({ skipRequest: true });
 

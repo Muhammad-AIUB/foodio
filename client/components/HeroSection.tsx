@@ -10,7 +10,7 @@ export default function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-0 items-center min-h-[calc(100vh-80px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-0 items-center min-h-[calc(80vh-80px)]">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -46,7 +46,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:absolute lg:top-[22%] lg:right-[-1%] relative flex items-center justify-center"
+            className="lg:absolute lg:top-[7%] lg:right-[-1%] lg:left-165 relative flex items-center justify-center"
           >
             <div className="relative z-10">
               <CircularImage
