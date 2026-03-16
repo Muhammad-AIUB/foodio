@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   description:
     "Experience a symphony of flavors crafted with passion. Premium ingredients, exquisite recipes, delivered to your door.",
   icons: {
-    icon: "/images/logo.svg",
-    shortcut: "/images/logo.svg",
+    icon: "/images/logo.jpeg",
+    shortcut: "/images/logo.jpeg",
   },
 };
 
