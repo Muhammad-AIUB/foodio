@@ -8,22 +8,36 @@ import { AppModule } from './app.module';
 import { GlobalResponseInterceptor } from './common/interceptors/response.interceptor';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log'],
-  });
+  const app = await NestFactory.create(AppModule);
+
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
+  // Body parser limits
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
-  app.use(helmet());
+
+  // Helmet with CORS-friendly settings
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+    }),
+  );
+
+  // THE FIX: Explicitly allow Vercel
   app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: true, // Allow all origins to talk to the server
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+    ],
   });
+
   app.setGlobalPrefix('api/v1');
 
   app.useGlobalPipes(
@@ -31,15 +45,14 @@ async function bootstrap(): Promise<void> {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: { enableImplicitConversion: false },
     }),
   );
 
   app.useGlobalInterceptors(new GlobalResponseInterceptor());
 
-  const port = config.get<number>('PORT') ?? 5000;
-  await app.listen(port);
-  logger.log(`Server running on http://localhost:${port}/api/v1`);
+  const port = config.get<number>('PORT') || 5000;
+  await app.listen(port, '0.0.0.0'); // Important for Render
+  logger.log(`Server running on port ${port}`);
 }
 
 void bootstrap();
