@@ -28,6 +28,22 @@ export default function OrdersTable({
   onStatusChange,
   onViewDetails,
 }: OrdersTableProps) {
+  if (!Array.isArray(orders)) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+        Failed to load orders.
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-10 text-center text-text-muted">
+        No orders available right now.
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden">
       <table className="w-full">
