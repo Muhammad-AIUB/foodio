@@ -40,10 +40,10 @@ export class AuthController {
   async signIn(
     @Body() dto: SignInDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ user: SafeUser }> {
+  ): Promise<{ user: SafeUser; accessToken: string }> {
     const { accessToken, user } = await this.authService.signIn(dto);
     this.setTokenCookie(res, accessToken);
-    return { user };
+    return { user, accessToken };
   }
 
   @HttpCode(HttpStatus.OK)
@@ -67,12 +67,15 @@ export class AuthController {
   }
 
   private getCookieOptions(): CookieOptions {
-    const isProd = this.config.get('NODE_ENV') === 'production';
+    const nodeEnv = this.config.get<string>('NODE_ENV');
+    const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? '';
+    const requireSecure =
+      nodeEnv === 'production' || frontendUrl.startsWith('https');
 
     return {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
+      secure: requireSecure,
+      sameSite: requireSecure ? 'none' : 'lax',
       path: '/',
     };
   }

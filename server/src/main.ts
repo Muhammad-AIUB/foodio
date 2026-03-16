@@ -22,12 +22,12 @@ async function bootstrap(): Promise<void> {
     ),
   );
 
-  // Body parser limits
+  logger.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
 
-  // Helmet with CORS-friendly settings
   app.use(
     helmet({
       crossOriginResourcePolicy: false,
@@ -36,9 +36,10 @@ async function bootstrap(): Promise<void> {
 
   app.enableCors({
     origin: allowedOrigins,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['set-cookie'],
   });
 
   app.setGlobalPrefix('api/v1');
