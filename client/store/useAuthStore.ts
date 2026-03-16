@@ -38,11 +38,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data } = await api.get<{ data: AuthUser }>('/auth/me');
       const user = data?.data ?? data;
-      set({ user, isAuthenticated: true });
+      set({ user, isAuthenticated: true, isLoading: false });
     } catch {
       get().clearAuth();
-    } finally {
-      set({ isLoading: false });
     }
   },
 

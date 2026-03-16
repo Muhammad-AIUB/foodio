@@ -26,6 +26,7 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -42,12 +43,19 @@ export default function SignInPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoading || !user) return;
+    if (isLoading || !user || redirecting) return;
     router.replace(user.role === "ADMIN" ? "/admin" : "/my-orders");
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, redirecting]);
 
-  if (!isLoading && user) {
-    return null;
+  if ((!isLoading && user) || redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-text-muted">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -61,15 +69,14 @@ export default function SignInPage() {
         setError("Invalid email or password.");
         return;
       }
-      const role = user.role;
+      setRedirecting(true);
       setSuccessMessage("Welcome back!");
-      if (role === "ADMIN") {
-        router.replace("/admin");
-      } else {
-        router.replace("/");
-      }
+      await new Promise((r) => setTimeout(r, 150));
+      router.refresh();
+      window.location.href = user.role === "ADMIN" ? "/admin" : "/";
     } catch (err) {
       setError(getErrorMessage(err));
+      setRedirecting(false);
     } finally {
       setLoading(false);
     }

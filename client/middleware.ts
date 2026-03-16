@@ -17,7 +17,10 @@ function decodeJwtPayload(token: string): { role?: string } | null {
 }
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
+  const cookieToken = request.cookies.get(COOKIE_NAME)?.value;
+  const authHeader = request.headers.get('authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = cookieToken || bearerToken;
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = pathname === '/sign-in' || pathname === '/login' || pathname === '/register';
