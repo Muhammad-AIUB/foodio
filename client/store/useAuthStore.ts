@@ -95,6 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set(() => {
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(AUTH_STORAGE_KEY);
+        window.localStorage.removeItem('isAuthenticated');
       }
 
       return { user: null, token: null, isAuthenticated: false, isLoading: false };

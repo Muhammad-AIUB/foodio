@@ -71,9 +71,10 @@ export default function SignInPage() {
       }
       setRedirecting(true);
       setSuccessMessage("Welcome back!");
-      await new Promise((r) => setTimeout(r, 150));
-      router.refresh();
-      window.location.href = user.role === "ADMIN" ? "/admin" : "/";
+      localStorage.setItem("isAuthenticated", "true");
+      setTimeout(() => {
+        window.location.assign(user.role === "ADMIN" ? "/admin" : "/");
+      }, 1000);
     } catch (err) {
       setError(getErrorMessage(err));
       setRedirecting(false);
