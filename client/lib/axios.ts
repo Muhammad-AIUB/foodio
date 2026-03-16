@@ -2,9 +2,7 @@ import axios, { type AxiosError } from 'axios';
 import { useAuthStore } from '@/store/useAuthStore';
 
 const origin = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/?$/, '');
-// NEXT_PUBLIC_API_URL may already include /api/v1 (e.g. http://localhost:5000/api/v1) — do not append again
 const baseURL = origin.includes('/api/v1') ? origin : `${origin}/api/v1`;
-const AUTH_STORAGE_KEY = 'auth-storage';
 
 export const api = axios.create({
   baseURL,
@@ -14,32 +12,14 @@ export const api = axios.create({
   },
 });
 
-const UNAUTHORIZED_EXCLUDED_PATHS = ['/auth/me', '/auth/signin', '/auth/register', '/auth/signout'];
+const AUTH_EXCLUDED_PATHS = ['/auth/signin', '/auth/register', '/auth/signout', '/auth/me'];
 
-let isRedirectingAfterUnauthorized = false;
-
-function getStoredToken(): string | null {
-  const { token } = useAuthStore.getState();
-  if (token) return token;
-
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
-    return parsed?.state?.token ?? null;
-  } catch {
-    return null;
-  }
-}
+let isRedirecting = false;
 
 api.interceptors.request.use((config) => {
-  const token = getStoredToken();
-
   config.withCredentials = true;
 
+  const { token } = useAuthStore.getState();
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -50,38 +30,20 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
+  (error: AxiosError) => {
     const status = error.response?.status;
     const requestUrl = error.config?.url ?? '';
-    const isExcludedPath = UNAUTHORIZED_EXCLUDED_PATHS.some((path) => requestUrl.includes(path));
+    const isExcluded = AUTH_EXCLUDED_PATHS.some((p) => requestUrl.includes(p));
 
-    const hadToken = !!getStoredToken();
+    if (status === 401 && !isExcluded && !isRedirecting) {
+      isRedirecting = true;
 
-    if (status === 401 && !isExcludedPath && !isRedirectingAfterUnauthorized && hadToken) {
-      isRedirectingAfterUnauthorized = true;
-      await useAuthStore.getState().logout({ skipRequest: true });
+      useAuthStore.getState().clearAuth();
 
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(AUTH_STORAGE_KEY);
-
-        try {
-          await axios.post(
-            `${baseURL}/auth/signout`,
-            {},
-            {
-              withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            },
-          );
-        } catch {}
-
-        if (window.location.pathname !== '/sign-in') {
-          window.location.href = '/sign-in';
-        } else {
-          isRedirectingAfterUnauthorized = false;
-        }
+      if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
+        window.location.href = '/sign-in';
+      } else {
+        isRedirecting = false;
       }
     }
 

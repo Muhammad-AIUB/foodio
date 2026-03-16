@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuthStore } from "@/store/useAuthStore";
 import QuantityModal from "./QuantityModal";
 
 interface FoodCardProps {
@@ -25,7 +27,17 @@ export default function FoodCard({
   index,
   animateOnLoad = false,
 }: FoodCardProps) {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      router.push("/sign-in");
+      return;
+    }
+    setModalOpen(true);
+  };
 
   const animationProps = animateOnLoad
     ? {
@@ -66,7 +78,7 @@ export default function FoodCard({
           <span className="text-2xl font-bold text-text-dark">{price}</span>
           <div className="absolute bottom-[-4%] right-[0%]">
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={handleAddToCart}
               className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 hover:bg-primary/90 transition-colors"
             >
               Add to Cart

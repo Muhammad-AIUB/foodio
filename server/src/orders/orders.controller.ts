@@ -28,9 +28,10 @@ export class OrdersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  findAll(@CurrentUser() user: User) {
-    return this.ordersService.findAll(user.id, user.role);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findAll() {
+    return this.ordersService.findAllForAdmin();
   }
 
   @Get('my')

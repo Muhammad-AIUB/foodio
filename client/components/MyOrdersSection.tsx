@@ -12,7 +12,7 @@ export default function MyOrdersSection() {
 
   useEffect(() => {
     api
-      .get<{ data: OrderApi[] }>("/orders")
+      .get<{ data: OrderApi[] }>("/orders/my")
       .then(({ data }) => {
         const list = data?.data ?? data ?? [];
         setOrders(Array.isArray(list) ? list : []);

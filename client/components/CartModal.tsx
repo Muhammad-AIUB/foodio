@@ -30,19 +30,28 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
       return;
     }
 
+    if (items.length === 0) return;
+
     setPlacing(true);
     try {
-      await api.post("/orders", {
+      const payload = {
         items: items.map((item) => ({
           menuItemId: item.id,
           quantity: item.quantity,
         })),
-      });
+      };
+
+      await api.post("/orders", payload);
+
       clearCart();
       onClose();
       toast.success("Order placed successfully!");
-    } catch {
-      toast.error("Failed to place order. Please try again.");
+      router.push("/my-orders");
+    } catch (err) {
+      const axiosErr = err as import("axios").AxiosError<{ message?: string | string[] }>;
+      const msg = axiosErr.response?.data?.message;
+      const errorText = Array.isArray(msg) ? msg[0] : msg;
+      toast.error(errorText || "Failed to place order. Please try again.");
     } finally {
       setPlacing(false);
     }
