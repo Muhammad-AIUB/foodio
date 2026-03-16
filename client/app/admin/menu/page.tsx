@@ -66,8 +66,6 @@ export default function AdminMenuPage() {
     fetchData();
   }, [fetchData]);
 
-  const categoryNames = categories.map((c) => c.name);
-
   const handleAddItem = () => {
     setEditingItem(null);
     setIsItemModalOpen(true);
@@ -78,28 +76,33 @@ export default function AdminMenuPage() {
     setIsItemModalOpen(true);
   };
 
-  const handleSaveItem = async (item: AdminFoodItem) => {
+  const handleSaveItem = async (
+    item: AdminFoodItem & { newImageUrl?: string }
+  ) => {
     try {
       setError(null);
-      const cat = categories.find((c) => c.name === item.category || c.id === item.categoryId);
-      const categoryId = cat?.id;
+      const categoryId = item.categoryId;
       if (!categoryId) {
         throw new Error("Please select a valid category.");
       }
+      const price = Number(item.price);
       if (editingItem) {
-        await api.patch(`/menu-items/${item.id}`, {
+        const patchPayload: Record<string, unknown> = {
           name: item.name,
           description: item.description,
-          price: item.price,
-          imageUrl: item.image,
+          price,
           availability: item.status === "available",
           categoryId,
-        });
+        };
+        if (item.newImageUrl != null) {
+          patchPayload.imageUrl = item.newImageUrl;
+        }
+        await api.patch(`/menu-items/${item.id}`, patchPayload);
       } else {
         await api.post("/menu-items", {
           name: item.name,
           description: item.description,
-          price: item.price,
+          price,
           imageUrl: item.image,
           availability: item.status === "available",
           categoryId,
@@ -225,7 +228,7 @@ export default function AdminMenuPage() {
         }}
         onSave={handleSaveItem}
         item={editingItem}
-        categories={categoryNames}
+        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
       />
 
       <AddEditCategoryModal

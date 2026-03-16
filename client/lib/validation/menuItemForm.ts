@@ -46,7 +46,7 @@ export const menuItemFormSchema = z.object({
       const parsed = Number(value.replace("$", "").trim());
       return !Number.isNaN(parsed) && parsed > 0;
     }, "Enter a valid price greater than 0."),
-  category: z.string().trim().min(1, "Category is required."),
+  categoryId: z.string().trim().min(1, "Category is required."),
   description: z
     .string()
     .max(1000, "Description must be 1000 characters or fewer."),

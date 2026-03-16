@@ -16,12 +16,17 @@ import {
 import ToggleSwitch from "./ToggleSwitch";
 import ImageUpload from "./ImageUpload";
 
+interface CategoryOption {
+  id: string;
+  name: string;
+}
+
 interface AddEditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (item: AdminFoodItem) => Promise<void> | void;
+  onSave: (item: AdminFoodItem & { newImageUrl?: string }) => Promise<void> | void;
   item: AdminFoodItem | null;
-  categories: string[];
+  categories: CategoryOption[];
 }
 
 export default function AddEditItemModal({
@@ -50,7 +55,7 @@ export default function AddEditItemModal({
     defaultValues: {
       name: "",
       price: "",
-      category: "",
+      categoryId: "",
       description: "",
       imageUrl: undefined,
     },
@@ -63,7 +68,7 @@ export default function AddEditItemModal({
       reset({
         name: item?.name ?? "",
         price: item ? String(item.price) : "",
-        category: item?.category ?? "",
+        categoryId: item?.categoryId ?? "",
         description: item?.description ?? "",
         imageUrl: item?.image ?? undefined,
       });
@@ -140,14 +145,17 @@ export default function AddEditItemModal({
       }
 
       const priceNum = Number(values.price.replace("$", "").trim());
+      const categoryName = categories.find((c) => c.id === values.categoryId)?.name ?? "";
       await onSave({
         id: item?.id || crypto.randomUUID(),
         name: values.name.trim(),
         price: priceNum,
-        category: values.category,
+        category: categoryName,
+        categoryId: values.categoryId,
         description: values.description.trim(),
         image: imageValue,
         status: available ? "available" : "unavailable",
+        newImageUrl: pendingFile ? imageValue : undefined,
       });
 
       toast.success(item ? "Menu item updated." : "Menu item created.");
@@ -243,21 +251,21 @@ export default function AddEditItemModal({
                   Category
                 </label>
                 <select
-                  {...register("category")}
-                  aria-invalid={Boolean(errors.category)}
+                  {...register("categoryId")}
+                  aria-invalid={Boolean(errors.categoryId)}
                   className={`w-full px-4 py-3 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none ${
-                    errors.category ? "border-red-300" : "border-gray-200"
+                    errors.categoryId ? "border-red-300" : "border-gray-200"
                   }`}
                 >
                   <option value="">Select a category</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
-                {errors.category && (
-                  <p className="mt-1.5 text-sm text-red-600">{errors.category}</p>
+                {errors.categoryId && (
+                  <p className="mt-1.5 text-sm text-red-600">{errors.categoryId}</p>
                 )}
               </div>
 
