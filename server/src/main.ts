@@ -19,8 +19,8 @@ async function bootstrap(): Promise<void> {
   app.use(cookieParser());
   app.use(helmet());
   app.enableCors({
-    origin: config.get<string>('FRONTEND_URL') ?? config.get<string>('CLIENT_URL') ?? 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
