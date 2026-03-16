@@ -112,6 +112,7 @@ export default function CategoriesSection() {
             {itemsForCategory.map((item, index) => (
               <FoodCard
                 key={item.id}
+                id={item.id}
                 name={item.name}
                 description={item.description ?? ""}
                 price={`$${Number(item.price).toFixed(2)}`}

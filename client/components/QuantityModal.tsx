@@ -9,6 +9,7 @@ import { useCart } from "./CartContext";
 interface QuantityModalProps {
   isOpen: boolean;
   onClose: () => void;
+  itemId: string;
   itemName: string;
   itemPrice: string;
   itemImage: string;
@@ -17,6 +18,7 @@ interface QuantityModalProps {
 export default function QuantityModal({
   isOpen,
   onClose,
+  itemId,
   itemName,
   itemPrice,
   itemImage,
@@ -124,6 +126,7 @@ export default function QuantityModal({
                 onClick={() => {
                   const numericPrice = parseFloat(itemPrice.replace("$", ""));
                   addItem({
+                    id: itemId,
                     name: itemName,
                     price: numericPrice,
                     image: itemImage,

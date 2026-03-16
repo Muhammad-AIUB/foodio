@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Minus, Plus, Trash2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartContext";
+import { useAuthStore } from "@/store/useAuthStore";
+import { api } from "@/lib/axios";
+import { toast } from "@/lib/toast";
 
 interface CartModalProps {
   isOpen: boolean;
@@ -14,6 +18,35 @@ interface CartModalProps {
 
 export default function CartModal({ isOpen, onClose }: CartModalProps) {
   const { items, removeItem, updateQuantity, totalAmount, totalItems, clearCart } = useCart();
+  const user = useAuthStore((s) => s.user);
+  const router = useRouter();
+  const [placing, setPlacing] = useState(false);
+
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error("Please sign in to place an order.");
+      onClose();
+      router.push("/sign-in");
+      return;
+    }
+
+    setPlacing(true);
+    try {
+      await api.post("/orders", {
+        items: items.map((item) => ({
+          menuItemId: item.id,
+          quantity: item.quantity,
+        })),
+      });
+      clearCart();
+      onClose();
+      toast.success("Order placed successfully!");
+    } catch {
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -73,7 +106,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
 
             <div className="space-y-0">
               {items.map((item, index) => (
-                <div key={item.name}>
+                <div key={item.id}>
                   <div className="py-5">
                     <div className="flex items-center gap-4 mb-4">
                       <div className="relative w-[60px] h-[60px] rounded-full overflow-hidden shadow-md flex-shrink-0">
@@ -94,7 +127,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                         </p>
                       </div>
                       <button
-                        onClick={() => removeItem(item.name)}
+                        onClick={() => removeItem(item.id)}
                         className="p-2 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
                       >
                         <Trash2 className="w-5 h-5 text-red-500" />
@@ -105,7 +138,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
-                            updateQuantity(item.name, item.quantity - 1)
+                            updateQuantity(item.id, item.quantity - 1)
                           }
                           disabled={item.quantity <= 1}
                           className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-primary hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -117,7 +150,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                         </span>
                         <button
                           onClick={() =>
-                            updateQuantity(item.name, item.quantity + 1)
+                            updateQuantity(item.id, item.quantity + 1)
                           }
                           className="w-9 h-9 rounded-full border border-primary bg-primary/5 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
                         >
@@ -158,13 +191,18 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      clearCart();
-                      onClose();
-                    }}
-                    className="flex-1 py-3.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    onClick={handleCheckout}
+                    disabled={placing}
+                    className="flex-1 py-3.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
-                    Confirm Order
+                    {placing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Placing...
+                      </>
+                    ) : (
+                      "Confirm Order"
+                    )}
                   </button>
                 </div>
               </>

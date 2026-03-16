@@ -8,6 +8,7 @@ import { api } from "@/lib/axios";
 import type { MenuItemApi, CategoryApi } from "@/lib/types";
 
 interface FoodItemView {
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -76,6 +77,7 @@ export default function FoodMenuSection() {
       items = [...items].sort((a, b) => Number(a.price) - Number(b.price));
     }
     return items.map((m): FoodItemView => ({
+      id: m.id,
       name: m.name,
       description: m.description ?? "",
       price: `$${Number(m.price).toFixed(2)}`,
@@ -229,7 +231,7 @@ export default function FoodMenuSection() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6 pb-24">
           {filteredItems.map((item, index) => (
-            <FoodCard key={`${item.name}-${index}`} {...item} index={index % 4} animateOnLoad />
+            <FoodCard key={item.id} {...item} index={index % 4} animateOnLoad />
           ))}
         </div>
 

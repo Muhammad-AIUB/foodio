@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import QuantityModal from "./QuantityModal";
 
 interface FoodCardProps {
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -16,6 +17,7 @@ interface FoodCardProps {
 }
 
 export default function FoodCard({
+  id,
   name,
   description,
   price,
@@ -76,6 +78,7 @@ export default function FoodCard({
       <QuantityModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+        itemId={id}
         itemName={name}
         itemPrice={price}
         itemImage={image}

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react";
 
 export interface CartItem {
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -12,8 +13,8 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (name: string) => void;
-  updateQuantity: (name: string, quantity: number) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   totalAmount: number;
   totalItems: number;
@@ -26,10 +27,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((newItem: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.name === newItem.name);
+      const existing = prev.find((item) => item.id === newItem.id);
       if (existing) {
         return prev.map((item) =>
-          item.name === newItem.name
+          item.id === newItem.id
             ? { ...item, quantity: item.quantity + newItem.quantity }
             : item
         );
@@ -38,14 +39,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((name: string) => {
-    setItems((prev) => prev.filter((item) => item.name !== name));
+  const removeItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const updateQuantity = useCallback((name: string, quantity: number) => {
+  const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity < 1) return;
     setItems((prev) =>
-      prev.map((item) => (item.name === name ? { ...item, quantity } : item))
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   }, []);
 
