@@ -20,6 +20,8 @@ export default function SignInPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
   const register = useAuthStore((s) => s.register);
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const [activeTab, setActiveTab] = useState<"signin" | "register">("signin");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -38,6 +40,15 @@ export default function SignInPage() {
     setSuccessMessage(message);
     window.sessionStorage.removeItem("auth_success_message");
   }, []);
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    router.replace(user.role === "ADMIN" ? "/admin" : "/my-orders");
+  }, [isLoading, user, router]);
+
+  if (!isLoading && user) {
+    return null;
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -13,11 +13,6 @@ export default function AdminLayout({
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
-  const checkAuth = useAuthStore((s) => s.checkAuth);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -27,7 +22,7 @@ export default function AdminLayout({
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user || user.role !== 'ADMIN') {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
@@ -36,6 +31,10 @@ export default function AdminLayout({
         </div>
       </div>
     );
+  }
+
+  if (!user || user.role !== 'ADMIN') {
+    return null;
   }
 
   return (
