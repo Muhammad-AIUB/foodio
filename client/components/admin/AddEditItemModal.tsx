@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import type { AdminFoodItem } from "@/data/menuItems";
 import { toast } from "@/lib/toast";
+import { uploadToImgBB } from "@/lib/imgbb";
 import {
   type MenuItemFormValues,
   menuItemFormSchema,
@@ -32,7 +33,8 @@ export default function AddEditItemModal({
 }: AddEditItemModalProps) {
   const [available, setAvailable] = useState(true);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [convertingImage, setConvertingImage] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const {
@@ -42,7 +44,6 @@ export default function AddEditItemModal({
     setError,
     clearErrors,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<MenuItemFormValues>({
     resolver: zodResolver(menuItemFormSchema),
@@ -54,7 +55,6 @@ export default function AddEditItemModal({
       imageUrl: undefined,
     },
   });
-  const imageUrl = watch("imageUrl");
 
   useEffect(() => setMounted(true), []);
 
@@ -69,8 +69,9 @@ export default function AddEditItemModal({
       });
       setAvailable(item?.status === "available" || !item);
       setFileName(null);
+      setPendingFile(null);
       clearErrors("imageUrl");
-      setConvertingImage(false);
+      setUploadingImage(false);
       setSubmitting(false);
     }
   }, [isOpen, item, reset, clearErrors]);
@@ -89,26 +90,10 @@ export default function AddEditItemModal({
     };
   }, [isOpen, onClose]);
 
-  const readFileAsDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result);
-          return;
-        }
-
-        reject(new Error("Failed to convert image to Base64."));
-      };
-
-      reader.onerror = () => reject(new Error("Failed to convert image to Base64."));
-      reader.readAsDataURL(file);
-    });
-
-  const handleFileSelect = async (file: File | null) => {
+  const handleFileSelect = (file: File | null) => {
     if (!file) {
       setFileName(null);
+      setPendingFile(null);
       setValue("imageUrl", item?.image ?? undefined, {
         shouldDirty: true,
         shouldValidate: true,
@@ -117,32 +102,14 @@ export default function AddEditItemModal({
       return;
     }
 
-    try {
-      setConvertingImage(true);
-      const base64Image = await readFileAsDataUrl(file);
-      setFileName(file.name);
-      setValue("imageUrl", base64Image, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      clearErrors("imageUrl");
-    } catch (error) {
-      setFileName(null);
-      setValue("imageUrl", undefined, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
-      setError("imageUrl", {
-        type: "manual",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to convert image to Base64.",
-      });
-      toast.error("Failed to convert image to Base64.");
-    } finally {
-      setConvertingImage(false);
-    }
+    setPendingFile(file);
+    setFileName(file.name);
+    const previewUrl = URL.createObjectURL(file);
+    setValue("imageUrl", previewUrl, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    clearErrors("imageUrl");
   };
 
   const handleFileValidationError = (message: string) => {
@@ -155,6 +122,23 @@ export default function AddEditItemModal({
   const onSubmit = async (values: MenuItemFormValues) => {
     try {
       setSubmitting(true);
+
+      let imageValue = values.imageUrl || item?.image || "/images/image1.jpeg";
+
+      if (pendingFile) {
+        try {
+          setUploadingImage(true);
+          imageValue = await uploadToImgBB(pendingFile);
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Failed to upload image."
+          );
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
       const priceNum = Number(values.price.replace("$", "").trim());
       await onSave({
         id: item?.id || crypto.randomUUID(),
@@ -162,7 +146,7 @@ export default function AddEditItemModal({
         price: priceNum,
         category: values.category,
         description: values.description.trim(),
-        image: values.imageUrl || item?.image || "/images/image1.jpeg",
+        image: imageValue,
         status: available ? "available" : "unavailable",
       });
 
@@ -298,14 +282,14 @@ export default function AddEditItemModal({
                   onFileSelect={handleFileSelect}
                   onValidationError={handleFileValidationError}
                 />
-                {item?.image && !fileName && !imageUrl?.startsWith("data:image") && (
+                {item?.image && !fileName && (
                   <p className="mt-1.5 text-xs text-text-muted">
                     Leave this empty to keep the current image.
                   </p>
                 )}
-                {convertingImage && (
+                {uploadingImage && (
                   <p className="mt-1.5 text-xs text-text-muted">
-                    Converting image to Base64...
+                    Uploading image...
                   </p>
                 )}
               </div>
@@ -319,7 +303,7 @@ export default function AddEditItemModal({
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  disabled={submitting || convertingImage}
+                  disabled={submitting || uploadingImage}
                   className="bg-primary text-white px-8 py-3 rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
                   {submitting ? "Saving..." : "Save Changes"}
