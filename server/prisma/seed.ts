@@ -31,12 +31,14 @@ async function main(): Promise<void> {
     console.log('Existing data cleared.\n');
 
     // ─── Seed Users ──────────────────────────────────────────────────────────
+    // eslint-disable-next-line
     const hashedPassword = await bcrypt.hash('password123', SALT_ROUNDS);
 
     const admin = await prisma.user.create({
       data: {
         name: 'Foodio Admin',
         email: 'admin@foodio.com',
+        // eslint-disable-next-line
         password: hashedPassword,
         role: 'ADMIN',
       },
@@ -47,6 +49,7 @@ async function main(): Promise<void> {
       data: {
         name: 'Test User',
         email: 'user@foodio.com',
+        // eslint-disable-next-line
         password: hashedPassword,
         role: 'USER',
       },
@@ -80,7 +83,7 @@ async function main(): Promise<void> {
           {
             name: 'Soup of the Day',
             description:
-              'Chef\'s daily selection of seasonal soup, served with warm bread.',
+              "Chef's daily selection of seasonal soup, served with warm bread.",
             price: 6.99,
             imageUrl:
               'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80',
@@ -185,7 +188,11 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error('Seed failed:', e);
+main().catch((error: unknown) => {
+  if (error instanceof Error) {
+    console.error('Seed failed:', error.message);
+  } else {
+    console.error('Seed failed with non-error value:', error);
+  }
   process.exit(1);
 });

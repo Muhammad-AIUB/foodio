@@ -51,9 +51,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data } = await api.post<{ data?: { user: AuthUser; accessToken?: string }; user?: AuthUser; accessToken?: string }>(
         '/auth/signin',
         {
-        email,
-        password,
+          email,
+          password,
         },
+        { withCredentials: true },
       );
       const payload = data?.data ?? data;
       const raw = payload?.user;
