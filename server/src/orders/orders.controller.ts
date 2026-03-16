@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { User, UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -19,12 +20,25 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@CurrentUser() user: User, @Body() dto: CreateOrderDto) {
-    return this.ordersService.create(user.id, dto);
+  async create(@CurrentUser() user: User, @Body() dto: CreateOrderDto) {
+    await this.ordersService.validateItems(dto);
+
+    this.eventEmitter.emit('order.process', {
+      userId: user.id,
+      payload: dto,
+    });
+
+    return {
+      success: true,
+      message: 'Order placed and is being processed in the background.',
+    };
   }
 
   @Get()

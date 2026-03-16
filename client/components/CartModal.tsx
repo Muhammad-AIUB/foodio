@@ -52,7 +52,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
       const res = await api.post("/orders", payload);
       console.log(">>> Order response:", res.status, res.data);
 
-      toast.success("Order confirmed!");
+      toast.success("Your Order has been confirmed!");
       clearCart();
       onClose();
       router.push("/my-orders");

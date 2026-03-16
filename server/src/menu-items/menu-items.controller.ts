@@ -8,7 +8,9 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 import { MenuItem, UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -23,6 +25,8 @@ export class MenuItemsController {
   constructor(private readonly menuItemsService: MenuItemsService) {}
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('all_menu_items')
   findAll(
     @Query('search') search?: string,
     @Query('category') category?: string,

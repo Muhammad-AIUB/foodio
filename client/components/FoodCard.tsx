@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "@/lib/toast";
 import QuantityModal from "./QuantityModal";
 
 interface FoodCardProps {
@@ -33,7 +34,10 @@ export default function FoodCard({
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      router.push("/sign-in");
+      toast.error("Please log in or sign up to add items to your cart.");
+      window.setTimeout(() => {
+        router.push("/sign-in");
+      }, 1000);
       return;
     }
     setModalOpen(true);

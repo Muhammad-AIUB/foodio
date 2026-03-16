@@ -1,16 +1,18 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 export type ToastVariant = "error" | "success";
 
 export interface ToastDetail {
   id: string;
-  message: string;
+  message: ReactNode;
   variant: ToastVariant;
 }
 
 export const TOAST_EVENT = "foodio:toast";
 
-function emitToast(variant: ToastVariant, message: string) {
+function emitToast(variant: ToastVariant, message: ReactNode) {
   if (typeof window === "undefined") return;
 
   window.dispatchEvent(
@@ -25,10 +27,10 @@ function emitToast(variant: ToastVariant, message: string) {
 }
 
 export const toast = {
-  error(message: string) {
+  error(message: ReactNode) {
     emitToast("error", message);
   },
-  success(message: string) {
+  success(message: ReactNode) {
     emitToast("success", message);
   },
 };

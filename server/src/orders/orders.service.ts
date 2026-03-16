@@ -42,7 +42,31 @@ export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
 
-  async create(userId: string, dto: CreateOrderDto) {
+  async validateItems(dto: CreateOrderDto) {
+    const menuItemIds = [...new Set(dto.items.map((i) => i.menuItemId))];
+
+    const menuItems = await this.prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds } },
+      select: { id: true, price: true, availability: true, name: true },
+    });
+
+    if (menuItems.length !== menuItemIds.length) {
+      const foundIds = new Set(menuItems.map((m) => m.id));
+      const missing = menuItemIds.filter((id) => !foundIds.has(id));
+      throw new NotFoundException(
+        `Menu item(s) not found: ${missing.join(', ')}`,
+      );
+    }
+
+    const unavailable = menuItems.filter((m) => !m.availability);
+    if (unavailable.length > 0) {
+      throw new BadRequestException(
+        `Unavailable item(s): ${unavailable.map((m) => m.name).join(', ')}`,
+      );
+    }
+  }
+
+  async processOrder(userId: string, dto: CreateOrderDto) {
     const menuItemIds = [...new Set(dto.items.map((i) => i.menuItemId))];
 
     return this.prisma.$transaction(async (tx) => {
@@ -54,16 +78,18 @@ export class OrdersService {
       if (menuItems.length !== menuItemIds.length) {
         const foundIds = new Set(menuItems.map((m) => m.id));
         const missing = menuItemIds.filter((id) => !foundIds.has(id));
-        throw new NotFoundException(
-          `Menu item(s) not found: ${missing.join(', ')}`,
+        this.logger.error(
+          `Background order failed — menu item(s) not found: ${missing.join(', ')}`,
         );
+        return;
       }
 
       const unavailable = menuItems.filter((m) => !m.availability);
       if (unavailable.length > 0) {
-        throw new BadRequestException(
-          `Unavailable item(s): ${unavailable.map((m) => m.name).join(', ')}`,
+        this.logger.error(
+          `Background order failed — unavailable item(s): ${unavailable.map((m) => m.name).join(', ')}`,
         );
+        return;
       }
 
       const priceMap = new Map(

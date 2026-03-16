@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X, Minus, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartContext";
+import { toast } from "@/lib/toast";
 
 interface QuantityModalProps {
   isOpen: boolean;
@@ -132,6 +133,11 @@ export default function QuantityModal({
                     image: itemImage,
                     quantity,
                   });
+                  toast.success(
+                    <span>
+                      <strong className="font-bold text-gray-900">{itemName}</strong> has been added to cart.
+                    </span>
+                  );
                   onClose();
                 }}
                 className="flex-1 py-3 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
