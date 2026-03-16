@@ -225,7 +225,7 @@ export default function AddEditItemModal({
                     }`}
                   />
                   {errors.name && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>
+                    <p className="mt-1.5 text-sm text-red-600">{errors.name.message}</p>
                   )}
                 </div>
                 <div>
@@ -241,7 +241,7 @@ export default function AddEditItemModal({
                     }`}
                   />
                   {errors.price && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.price}</p>
+                    <p className="mt-1.5 text-sm text-red-600">{errors.price.message}</p>
                   )}
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function AddEditItemModal({
                   ))}
                 </select>
                 {errors.categoryId && (
-                  <p className="mt-1.5 text-sm text-red-600">{errors.categoryId}</p>
+                  <p className="mt-1.5 text-sm text-red-600">{errors.categoryId.message}</p>
                 )}
               </div>
 
